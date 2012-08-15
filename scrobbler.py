@@ -158,7 +158,7 @@ class Scrobbler(threading.Thread):
                 Debug("[Scrobbler] Scrobble responce: "+str(responce))
 
     def check(self):
-        __name__.__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+        __settings__ = xbmcaddon.Addon( "script.traktutilities" )
         scrobbleMinViewTimeOption = __settings__.getSetting("scrobble_min_view_time")
 
         if (self.watchedTime/self.totalTime)*100 >= float(scrobbleMinViewTimeOption):

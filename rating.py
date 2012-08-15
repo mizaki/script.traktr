@@ -15,7 +15,7 @@ __status__ = "Production"
 __settings__ = xbmcaddon.Addon( "script.traktutilities" )
 
 def ratingCheck(curVideo, watchedTime, totalTime, playlistLength):
-    __name__.__settings__ = xbmcaddon.Addon( "script.traktutilities" ) #read settings again, encase they have changed
+    __settings__ = xbmcaddon.Addon( "script.traktutilities" ) #read settings again, encase they have changed
     # you can disable rating in options
     rateMovieOption = __settings__.getSetting("rate_movie")
     rateEpisodeOption = __settings__.getSetting("rate_episode")
