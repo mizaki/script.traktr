@@ -1,12 +1,12 @@
-import os, xbmc
+
+import os
+import xbmc
 from utilities import Debug
 #provides access to the raw xbmc video database
 
-
-global _RawXbmcDb__conn
 _RawXbmcDb__conn = None
-class RawXbmcDb():
 
+class RawXbmcDb():
     # make a httpapi based XBMC db query (get data)
     @staticmethod
     def query(str):
@@ -21,7 +21,7 @@ class RawXbmcDb():
         matches = []
         for row in cursor:
             matches.append(row)
-        
+
         Debug("[RawXbmcDb] matches: "+unicode(matches))
 
         _RawXbmcDb__conn.commit()
@@ -66,7 +66,7 @@ def _findXbmcDb():
                     passwd = setting.text
         else:
             type = 'sqlite3'
-    
+
     if type == 'sqlite3':
         if host is None:
             path = xbmc.translatePath("special://userdata/Database")
@@ -76,7 +76,7 @@ def _findXbmcDb():
                 if file[:8] == 'MyVideos' and file[-3:] == '.db':
                     if file > latest:
                         latest = file
-            host = os.path.join(path,latest)
+            host = os.path.join(path, latest)
         else:
             host += version+".db"
         Debug("[RawXbmcDb] Found sqlite3db: "+str(host))
@@ -89,4 +89,4 @@ def _findXbmcDb():
             database = name
         Debug("[RawXbmcDb] Found mysqldb: "+str(host)+":"+str(port)+", "+str(database))
         import mysql.connector
-        return mysql.connector.Connect(host = str(host), port = int(port), database = str(database), user = str(user), password = str(passwd))        
+        return mysql.connector.Connect(host = str(host), port = int(port), database = str(database), user = str(user), password = str(passwd))

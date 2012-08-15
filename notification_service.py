@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
-# 
+#
 
-import xbmc,xbmcaddon,xbmcgui
-import telnetlib, time
+import xbmc
+import xbmcaddon
+import telnetlib
+import time
 
-try: import simplejson as json
-except ImportError: import json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 import threading
-from utilities import *
-from rating import *
-from sync_update import *
-from instant_sync import *
+import instant_sync
 from scrobbler import Scrobbler
+from utilities import Debug
 
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
@@ -27,30 +29,30 @@ __language__ = __settings__.getLocalizedString
 # Receives XBMC notifications and passes them off to the rating functions
 class NotificationService(threading.Thread):
     abortRequested = False
-    def run(self):        
+    def run(self):
         #while xbmc is running
         scrobbler = Scrobbler()
         scrobbler.start()
-        
+
         while (not (self.abortRequested or xbmc.abortRequested)):
             time.sleep(1)
             try:
-                tn = telnetlib.Telnet('localhost', 9090, 10)
+                telnet = telnetlib.Telnet('localhost', 9090, 10)
             except IOError as (errno, strerror):
                 #connection failed, try again soon
                 Debug("[Notification Service] Telnet too soon? ("+str(errno)+") "+strerror)
                 time.sleep(1)
                 continue
-            
-            Debug("[Notification Service] Waiting~");
+
+            Debug("[Notification Service] Waiting~")
             bCount = 0
-            
+
             while (not (self.abortRequested or xbmc.abortRequested)):
                 try:
                     if bCount == 0:
                         notification = ""
                         inString = False
-                    [index, match, raw] = tn.expect(["(\\\\)|(\\\")|[{\"}]"], 0.2) #note, pre-compiled regex might be faster here
+                    [index, match, raw] = telnet.expect(["(\\\\)|(\\\")|[{\"}]"], 0.2) #note, pre-compiled regex might be faster here
                     notification += raw
                     if index == -1: # Timeout
                         continue
@@ -69,12 +71,12 @@ class NotificationService(threading.Thread):
                         bCount = 0
                 except EOFError:
                     break #go out to the other loop to restart the connection
-                
+
                 Debug("[Notification Service] message: " + str(notification))
-                
+
                 # Parse recieved notification
                 data = json.loads(notification)
-                
+
                 # Forward notification to functions
                 if 'method' in data and 'params' in data and 'sender' in data['params'] and data['params']['sender'] == 'xbmc':
                     if data['method'] == 'Player.OnStop':
@@ -86,11 +88,11 @@ class NotificationService(threading.Thread):
                         scrobbler.playbackPaused()
                     elif data['method'] == 'VideoLibrary.OnUpdate':
                         if 'data' in data['params'] and 'playcount' in data['params']['data']:
-                            instantSyncPlayCount(data)
+                            instant_sync.instantSyncPlayCount(data)
                     elif data['method'] == 'System.OnQuit':
                         self.abortRequested = True
         try:
-            tn.close()
+            telnet.close()
         except:
             Debug("[NotificationService] Encountered error attempting to close the telnet connection")
             raise

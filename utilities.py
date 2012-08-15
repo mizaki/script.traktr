@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
-# 
+#
 
-import os, sys
-import xbmc,xbmcaddon,xbmcgui
-import time, socket
-
-try: import simplejson as json
-except ImportError: import json
-
-from nbhttpconnection import *
-from nbhttpsconnection import *
-
-import urllib, re
+import xbmc
+import xbmcaddon
+import xbmcgui
+import time
+import socket
 
 try:
-    # Python 3.0 +
-    import http.client as httplib
+    import simplejson as json
 except ImportError:
-    # Python 2.7 and earlier
-    import httplib
+    import json
+
+import nbhttpconnection
+import nbhttpsconnection
+
+import re
 
 try:
-  # Python 2.6 +
-  from hashlib import sha as sha
+    # Python 2.6 +
+    from hashlib import sha as sha
 except ImportError:
-  # Python 2.5 and earlier
-  import sha
-  
+    # Python 2.5 and earlier
+    import sha
+
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
@@ -39,12 +36,10 @@ __settings__ = xbmcaddon.Addon( "script.traktutilities" )
 __language__ = __settings__.getLocalizedString
 
 apikey = '0a698a20b222d0b8637298f6920bf03a'
-
 username = __settings__.getSetting("username")
 pwd = sha.new(__settings__.getSetting("password")).hexdigest()
 debug = __settings__.getSetting( "debug" )
 
-headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 
 def Debug(msg, force=False):
     if (debug == 'true' or force):
@@ -56,7 +51,7 @@ def Debug(msg, force=False):
 #This class needs debug
 from raw_xbmc_database import RawXbmcDb
 
-def notification( header, message, time=5000, icon=__settings__.getAddonInfo( "icon" ) ):
+def notification(header, message, time=5000, icon=__settings__.getAddonInfo("icon")):
     xbmc.executebuiltin( "XBMC.Notification(%s,%s,%i,%s)" % ( header, message, time, icon ) )
 
 def checkSettings(daemon=False):
@@ -74,7 +69,7 @@ def checkSettings(daemon=False):
             xbmcgui.Dialog().ok("Trakt Utilities", __language__(1107).encode( "utf-8", "ignore" )) # please enter your Password in settings
             __settings__.openSettings()
         return False
-    
+
     data = traktJsonRequest('POST', '/account/test/%%API_KEY%%', silent=True)
     if data == None: #Incorrect trakt login details
         if daemon:
@@ -83,27 +78,27 @@ def checkSettings(daemon=False):
             xbmcgui.Dialog().ok("Trakt Utilities", __language__(1110).encode( "utf-8", "ignore" )) # please enter your Password in settings
             __settings__.openSettings()
         return False
-        
+
     return True
 
 # SQL string quote escaper
-def xcp(s):
-    return re.sub('''(['])''', r"''", unicode(s))
+def xcp(sql):
+    return re.sub('''(['])''', r"''", unicode(sql))
 
 # get a connection to trakt
 def getTraktConnection():
     https = __settings__.getSetting('https')
     try:
         if (https == 'true'):
-            conn = NBHTTPSConnection('api.trakt.tv')
+            conn = nbhttpsconnection.NBHTTPSConnection('api.trakt.tv')
         else:
-            conn = NBHTTPConnection('api.trakt.tv')
+            conn = nbhttpconnection.NBHTTPConnection('api.trakt.tv')
     except socket.timeout:
         Debug("getTraktConnection: can't connect to trakt - timeout")
         notification("Trakt Utilities", __language__(1108).encode( "utf-8", "ignore" ) + ": timeout") # can't connect to trakt
         return None
     return conn
-    
+
 # make a JSON api request to trakt
 # method: http method (GET or POST)
 # req: REST request (ie '/user/library/movies/all.json/%%API_KEY%%/%%USERNAME%%')
@@ -129,8 +124,8 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
         return None
 
     try:
-        req = req.replace("%%API_KEY%%",apikey)
-        req = req.replace("%%USERNAME%%",username)
+        req = req.replace("%%API_KEY%%", apikey)
+        req = req.replace("%%USERNAME%%", username)
         if method == 'POST':
             if not anon:
                 args['username'] = username
@@ -149,16 +144,17 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
         Debug("trakt json url: "+req)
     except socket.error:
         Debug("traktQuery: can't connect to trakt")
-        if not silent: notification("Trakt Utilities", __language__(1108).encode( "utf-8", "ignore" )) # can't connect to trakt
+        if not silent:
+            notification("Trakt Utilities", __language__(1108).encode( "utf-8", "ignore" )) # can't connect to trakt
         if returnStatus:
             data = {}
             data['status'] = 'failure'
             data['error'] = 'Socket error, unable to connect to trakt'
-            return data;
+            return data
         return None
-     
+
     conn.go()
-    
+
     while True:
         if xbmc.abortRequested:
             Debug("Broke loop due to abort")
@@ -166,17 +162,17 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
                 data = {}
                 data['status'] = 'failure'
                 data['error'] = 'Abort requested, not waiting for responce'
-                return data;
+                return data
             return None
         if conn.hasResult():
             break
         time.sleep(0.1)
-    
+
     response = conn.getResult()
     raw = response.read()
     if closeConnection:
         conn.close()
-    
+
     try:
         data = json.loads(raw)
     except ValueError:
@@ -186,19 +182,21 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             data['status'] = 'failure'
             data['error'] = 'Bad responce from trakt'
             return data
-        if not silent: notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
+        if not silent:
+            notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
         return None
-    
+
     if 'status' in data:
         if data['status'] == 'failure':
             Debug("traktQuery: Error: " + str(data['error']))
             if returnStatus:
-                return data;
-            if not silent: notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
+                return data
+            if not silent:
+                notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
             return None
-    
+
     return data
-   
+
 # get movies from trakt server
 def getMoviesFromTrakt(daemon=False):
     data = traktJsonRequest('POST', '/user/library/movies/all.json/%%API_KEY%%/%%USERNAME%%')
@@ -218,9 +216,10 @@ def traktMovieListByImdbID(data):
     trakt_movies = {}
 
     for i in range(0, len(data)):
-        if data[i]['imdb_id'] == "": continue
+        if data[i]['imdb_id'] == "":
+            continue
         trakt_movies[data[i]['imdb_id']] = data[i]
-        
+
     return trakt_movies
 
 # get easy access to tvshow by tvdb_id
@@ -229,7 +228,7 @@ def traktShowListByTvdbID(data):
 
     for i in range(0, len(data)):
         trakt_tvshows[data[i]['tvdb_id']] = data[i]
-        
+
     return trakt_tvshows
 
 # get seen tvshows from trakt server
@@ -275,14 +274,14 @@ def getTVShowCollectionFromTrakt(daemon=False):
     if data == None:
         Debug("Error in request from 'getTVShowCollectionFromTrakt()'")
     return data
-    
+
 # get tvshows from XBMC
 def getTVShowsFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows','params':{'properties': ['title', 'year', 'imdbnumber', 'playcount']}, 'id': 1})
-    
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows', 'params':{'properties': ['title', 'year', 'imdbnumber', 'playcount']}, 'id': 1})
+
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
-    
+
     # check for error
     try:
         error = result['error']
@@ -290,21 +289,21 @@ def getTVShowsFromXBMC():
         return None
     except KeyError:
         pass # no error
-    
+
     try:
         return result['result']
     except KeyError:
         Debug("getTVShowsFromXBMC: KeyError: result['result']")
         return None
-    
+
 # get seasons for a given tvshow from XBMC
 def getSeasonsFromXBMC(tvshow):
     Debug("getSeasonsFromXBMC: "+str(tvshow))
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetSeasons','params':{'tvshowid': tvshow['tvshowid']}, 'id': 1})
-    
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetSeasons', 'params':{'tvshowid': tvshow['tvshowid']}, 'id': 1})
+
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
-    
+
     # check for error
     try:
         error = result['error']
@@ -318,11 +317,11 @@ def getSeasonsFromXBMC(tvshow):
     except KeyError:
         Debug("getSeasonsFromXBMC: KeyError: result['result']")
         return None
-    
+
 # get episodes for a given tvshow / season from XBMC
 def getEpisodesFromXBMC(tvshow, season):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes','params':{'tvshowid': tvshow['tvshowid'], 'season': season, 'properties': ['playcount', 'episode']}, 'id': 1})
-    
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes', 'params':{'tvshowid': tvshow['tvshowid'], 'season': season, 'properties': ['playcount', 'episode']}, 'id': 1})
+
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
 
@@ -342,8 +341,8 @@ def getEpisodesFromXBMC(tvshow, season):
 
 # get a single episode from xbmc given the id
 def getEpisodeDetailsFromXbmc(libraryId, fields):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodeDetails','params':{'episodeid': libraryId, 'properties': fields}, 'id': 1})
-    
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodeDetails', 'params':{'episodeid': libraryId, 'properties': fields}, 'id': 1})
+
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
 
@@ -363,11 +362,11 @@ def getEpisodeDetailsFromXbmc(libraryId, fields):
 
 # get movies from XBMC
 def getMoviesFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetMovies','params':{'properties': ['title', 'year', 'originaltitle', 'imdbnumber', 'playcount', 'lastplayed']}, 'id': 1})
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetMovies', 'params':{'properties': ['title', 'year', 'originaltitle', 'imdbnumber', 'playcount', 'lastplayed']}, 'id': 1})
 
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
-    
+
     # check for error
     try:
         error = result['error']
@@ -375,7 +374,7 @@ def getMoviesFromXBMC():
         return None
     except KeyError:
         pass # no error
-    
+
     try:
         return result['result']['movies']
         Debug("getMoviesFromXBMC: KeyError: result['result']['movies']")
@@ -384,8 +383,8 @@ def getMoviesFromXBMC():
 
 # get a single movie from xbmc given the id
 def getMovieDetailsFromXbmc(libraryId, fields):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetMovieDetails','params':{'movieid': libraryId, 'properties': fields}, 'id': 1})
-    
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetMovieDetails', 'params':{'movieid': libraryId, 'properties': fields}, 'id': 1})
+
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
 
@@ -411,16 +410,16 @@ def setXBMCMoviePlaycount(imdb_id, playcount):
     match = RawXbmcDb.query(
     "SELECT movie.idFile FROM movie"+
     " WHERE movie.c09='%(imdb_id)s'" % {'imdb_id':xcp(imdb_id)})
-    
+
     if not match:
         #add error message here
         return
-    
+
     try:
         match[0][0]
     except KeyError:
         return
-    
+
     RawXbmcDb.execute(
     "UPDATE files"+
     " SET playcount=%(playcount)d" % {'playcount':int(playcount)}+
@@ -441,7 +440,7 @@ def setXBMCEpisodePlaycount(tvdb_id, seasonid, episodeid, playcount):
     "    AND episode.c12='%(seasonid)s'" % {'seasonid':xcp(seasonid)}+
     "    AND episode.c13='%(episodeid)s'" % {'episodeid':xcp(episodeid)}+
     " )")
-    
+
 # get current video being played from XBMC
 def getCurrentPlayingVideoFromXBMC():
     rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetActivePlayers','params':{}, 'id': 1})
@@ -454,11 +453,11 @@ def getCurrentPlayingVideoFromXBMC():
         return None
     except KeyError:
         pass # no error
-    
+
     try:
         for player in result['result']:
             if player['type'] == 'video':
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties','params':{'playerid': player['playerid'], 'properties':['playlistid', 'position']}, 'id': 1})
+                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties', 'params':{'playerid': player['playerid'], 'properties':['playlistid', 'position']}, 'id': 1})
                 result2 = xbmc.executeJSONRPC(rpccmd)
                 result2 = json.loads(result2)
                 # check for error
@@ -470,8 +469,8 @@ def getCurrentPlayingVideoFromXBMC():
                     pass # no error
                 playlistid = result2['result']['playlistid']
                 position = result2['result']['position']
-                
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetItems','params':{'playlistid': playlistid}, 'id': 1})
+
+                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetItems', 'params':{'playlistid': playlistid}, 'id': 1})
                 result2 = xbmc.executeJSONRPC(rpccmd)
                 result2 = json.loads(result2)
                 # check for error
@@ -482,14 +481,14 @@ def getCurrentPlayingVideoFromXBMC():
                 except KeyError:
                     pass # no error
                 Debug("Current playlist: "+str(result2['result']))
-                
+
                 return result2['result'][position]
         Debug("[Util] getCurrentPlayingVideoFromXBMC: No current video player")
         return None
     except KeyError:
         Debug("[Util] getCurrentPlayingVideoFromXBMC: KeyError")
         return None
-        
+
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
     if playerid == -1:
@@ -497,7 +496,7 @@ def getPlaylistLengthFromXBMCPlayer(playerid):
     if playerid < 0 or playerid > 2:
         Debug("[Util] getPlaylistLengthFromXBMCPlayer, invalid playerid: "+str(playerid))
         return 0
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties','params':{'playerid': playerid, 'properties':['playlistid']}, 'id': 1})
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties', 'params':{'playerid': playerid, 'properties':['playlistid']}, 'id': 1})
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
     # check for error
@@ -508,8 +507,8 @@ def getPlaylistLengthFromXBMCPlayer(playerid):
     except KeyError:
         pass # no error
     playlistid = result['result']['playlistid']
-    
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetProperties','params':{'playlistid': playlistid, 'properties': ['size']}, 'id': 1})
+
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetProperties', 'params':{'playlistid': playlistid, 'properties': ['size']}, 'id': 1})
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
     # check for error
@@ -519,14 +518,14 @@ def getPlaylistLengthFromXBMCPlayer(playerid):
         return 0
     except KeyError:
         pass # no error
-    
+
     return result['result']['size']
 
 def getMovieIdFromXBMC(imdb_id, title):
     # httpapi till jsonrpc supports searching for a single movie
     # Get id of movie by movies IMDB
     Debug("Searching for movie: "+imdb_id+", "+title)
-    
+
     match = RawXbmcDb.query(
     " SELECT idMovie FROM movie"+
     "  WHERE c09='%(imdb_id)s'" % {'imdb_id':imdb_id}+
@@ -534,19 +533,19 @@ def getMovieIdFromXBMC(imdb_id, title):
     " SELECT idMovie FROM movie"+
     "  WHERE upper(c00)='%(title)s'" % {'title':xcp(title.upper())}+
     " LIMIT 1")
-    
+
     if not match:
         Debug("getMovieIdFromXBMC: cannot find movie in database")
         return -1
-        
+
     return match[0]
 
 def getShowIdFromXBMC(tvdb_id, title):
     # httpapi till jsonrpc supports searching for a single show
     # Get id of show by shows tvdb id
-    
+
     Debug("Searching for show: "+str(tvdb_id)+", "+title)
-    
+
     match = RawXbmcDb.query(
     " SELECT idShow FROM tvshow"+
     "  WHERE c12='%(tvdb_id)s'" % {'tvdb_id':xcp(tvdb_id)}+
@@ -554,11 +553,11 @@ def getShowIdFromXBMC(tvdb_id, title):
     " SELECT idShow FROM tvshow"+
     "  WHERE upper(c00)='%(title)s'" % {'title':xcp(title.upper())}+
     " LIMIT 1")
-    
+
     if not match:
         Debug("getShowIdFromXBMC: cannot find movie in database")
         return -1
-        
+
     return match[0]
 
 # returns list of movies from watchlist
@@ -589,7 +588,7 @@ def addMoviesToWatchlist(data):
         if "year" in item:
             movie["year"] = item["year"]
         movies.append(movie)
-    
+
     data = traktJsonRequest('POST', '/movie/watchlist/%%API_KEY%%', {"movies":movies})
     if data == None:
         Debug("Error in request from 'addMoviesToWatchlist()'")
@@ -609,7 +608,7 @@ def removeMoviesFromWatchlist(data):
         if "year" in item:
             movie["year"] = item["year"]
         movies.append(movie)
-    
+
     data = traktJsonRequest('POST', '/movie/unwatchlist/%%API_KEY%%', {"movies":movies})
     if data == None:
         Debug("Error in request from 'removeMoviesFromWatchlist()'")
@@ -629,7 +628,7 @@ def addTVShowsToWatchlist(data):
         if "year" in item:
             show["year"] = item["year"]
         shows.append(show)
-    
+
     data = traktJsonRequest('POST', '/show/watchlist/%%API_KEY%%', {"shows":shows})
     if data == None:
         Debug("Error in request from 'addMoviesToWatchlist()'")
@@ -649,7 +648,7 @@ def removeTVShowsFromWatchlist(data):
         if "year" in item:
             show["year"] = item["year"]
         shows.append(show)
-    
+
     data = traktJsonRequest('POST', '/show/unwatchlist/%%API_KEY%%', {"shows":shows})
     if data == None:
         Debug("Error in request from 'removeMoviesFromWatchlist()'")
@@ -660,33 +659,33 @@ def rateMovieOnTrakt(imdbid, title, year, rating):
     if not (rating in ("love", "hate", "unrate")):
         #add error message
         return
-    
+
     Debug("Rating movie:" + rating)
-    
+
     data = traktJsonRequest('POST', '/rate/movie/%%API_KEY%%', {'imdb_id': imdbid, 'title': title, 'year': year, 'rating': rating})
     if data == None:
         Debug("Error in request from 'rateMovieOnTrakt()'")
-    
+
     if (rating == "unrate"):
         notification("Trakt Utilities", __language__(1166).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
         notification("Trakt Utilities", __language__(1167).encode( "utf-8", "ignore" )) # Rating submitted successfully
-    
+
     return data
 
 #Get the rating for a movie from trakt
 def getMovieRatingFromTrakt(imdbid, title, year):
     if imdbid == "" or imdbid == None:
         return None #would be nice to be smarter in this situation
-    
+
     data = traktJsonRequest('POST', '/movie/summary.json/%%API_KEY%%/'+str(imdbid))
     if data == None:
         Debug("Error in request from 'getMovieRatingFromTrakt()'")
         return None
-        
+
     if 'rating' in data:
         return data['rating']
-        
+
     print data
     Debug("Error in request from 'getMovieRatingFromTrakt()'")
     return None
@@ -696,33 +695,33 @@ def rateEpisodeOnTrakt(tvdbid, title, year, season, episode, rating):
     if not (rating in ("love", "hate", "unrate")):
         #add error message
         return
-    
+
     Debug("Rating episode:" + rating)
-    
+
     data = traktJsonRequest('POST', '/rate/episode/%%API_KEY%%', {'tvdb_id': tvdbid, 'title': title, 'year': year, 'season': season, 'episode': episode, 'rating': rating})
     if data == None:
         Debug("Error in request from 'rateEpisodeOnTrakt()'")
-    
+
     if (rating == "unrate"):
         notification("Trakt Utilities", __language__(1166).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
         notification("Trakt Utilities", __language__(1167).encode( "utf-8", "ignore" )) # Rating submitted successfully
-    
+
     return data
-    
+
 #Get the rating for a tv episode from trakt
 def getEpisodeRatingFromTrakt(tvdbid, title, year, season, episode):
     if tvdbid == "" or tvdbid == None:
         return None #would be nice to be smarter in this situation
-    
+
     data = traktJsonRequest('POST', '/show/episode/summary.json/%%API_KEY%%/'+str(tvdbid)+"/"+season+"/"+episode)
     if data == None:
         Debug("Error in request from 'getEpisodeRatingFromTrakt()'")
         return None
-        
+
     if 'rating' in data:
         return data['rating']
-        
+
     print data
     Debug("Error in request from 'getEpisodeRatingFromTrakt()'")
     return None
@@ -732,33 +731,33 @@ def rateShowOnTrakt(tvdbid, title, year, rating):
     if not (rating in ("love", "hate", "unrate")):
         #add error message
         return
-    
+
     Debug("Rating show:" + rating)
-    
+
     data = traktJsonRequest('POST', '/rate/show/%%API_KEY%%', {'tvdb_id': tvdbid, 'title': title, 'year': year, 'rating': rating})
     if data == None:
         Debug("Error in request from 'rateShowOnTrakt()'")
-    
+
     if (rating == "unrate"):
         notification("Trakt Utilities", __language__(1166).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
         notification("Trakt Utilities", __language__(1167).encode( "utf-8", "ignore" )) # Rating submitted successfully
-    
+
     return data
 
 #Get the rating for a tv show from trakt
 def getShowRatingFromTrakt(tvdbid, title, year):
     if tvdbid == "" or tvdbid == None:
         return None #would be nice to be smarter in this situation
-    
+
     data = traktJsonRequest('POST', '/show/summary.json/%%API_KEY%%/'+str(tvdbid))
     if data == None:
         Debug("Error in request from 'getShowRatingFromTrakt()'")
         return None
-        
+
     if 'rating' in data:
         return data['rating']
-        
+
     print data
     Debug("Error in request from 'getShowRatingFromTrakt()'")
     return None
@@ -808,7 +807,7 @@ def playMovieById(idMovie):
         rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.Open', 'params': {'item': {'movieid': int(idMovie)}}, 'id': 1})
         result = xbmc.executeJSONRPC(rpccmd)
         result = json.loads(result)
-        
+
         # check for error
         try:
             error = result['error']
@@ -816,7 +815,7 @@ def playMovieById(idMovie):
             return None
         except KeyError:
             pass # no error
-            
+
         try:
             if result['result'] == "OK":
                 if xbmc.Player().isPlayingVideo():

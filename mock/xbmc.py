@@ -183,7 +183,7 @@ def getInfoLabel(infotag):
     example:
       - label = xbmc.getInfoLabel('Weather.Conditions')
     """
-    pass
+    return ""
 
 
 def getLocalizedString(id):
