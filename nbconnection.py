@@ -19,10 +19,14 @@ __maintainer__ = "Ralph-Gordon Paul"
 __email__ = "ralph-gordon.paul@uni-duesseldorf.de"
 __status__ = "Production"
 
-# Allows non-blocking http requests
-class NBHTTPSConnection():
-    def __init__(self, host, port = None, strict = None, timeout = None):
-        self.rawConnection = httplib.HTTPSConnection(host, port, strict, timeout)
+# Allows non-blocking http[s] requests
+class NBConnection():
+    def __init__(self, host, port=None, strict=None, timeout=None, https=False):
+        if https:
+            self.rawConnection = httplib.HTTPSConnection(host, port, strict, timeout)
+        else:
+            self.rawConnection = httplib.HTTPConnection(host, port, strict, timeout)
+
         self.responce = None
         self.responceLock = threading.Lock()
         self.closing = False
@@ -44,7 +48,7 @@ class NBHTTPSConnection():
 
     def go(self):
         self.responceLock.acquire()
-        thread.start_new_thread ( NBHTTPSConnection._run, ( self, ) )
+        thread.start_new_thread ( NBConnection._run, ( self, ) )
 
     def _run(self):
         self.responce = self.rawConnection.getresponse()
