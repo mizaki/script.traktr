@@ -58,20 +58,20 @@ def syncMovies(daemon=False):
     playcount_update = []
     collection_update = []
 
-    for imdbid in trakt_movies:
-        if imdbid not in xbmc_movies:
-            continue
-        elif trakt_movies[imdbid]['plays'] > xbmc_movies[imdbid]['playcount']:
-            utilities.setXBMCMoviePlaycount(xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays'])
-        elif trakt_movies[imdbid]['plays'] < xbmc_movies[imdbid]['playcount']:
-            playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
-
     for imdbid in xbmc_movies:
-        if imdbid not in trakt_movies and xbmc_movies[imdbid]['playcount'] > 0:
-            collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+        if imdbid not in trakt_movies:
+            if xbmc_movies[imdbid]['playcount'] > 0:
+                collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+                playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
+            else:
+                collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+            continue
+
+        if xbmc_movies[imdbid]['playcount'] > trakt_movies[imdbid]['plays']:
             playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
-        elif imdbid not in trakt_movies and xbmc_movies[imdbid]['playcount'] == 0:
-            collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+        elif xbmc_movies[imdbid]['playcount'] < trakt_movies[imdbid]['plays']:
+            utilities.setXBMCMoviePlaycount(xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays'])
+
 
     if len(collection_update) > 0:
         utilities.traktJsonRequest('POST', '/movie/library/%%API_KEY%%', {'movies': collection_update})
