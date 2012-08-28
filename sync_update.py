@@ -22,6 +22,26 @@ __language__ = __settings__.getLocalizedString
 import datetime
 year = datetime.datetime.now().year
 
+
+def _updateXBMCMoviePlaycounts(playcount_list, progress, daemon):
+    """Updates playcounts from the list passed to it and updates the progress bar"""
+
+    count = len(playcount_list)
+    index = 0
+
+    if not daemon:
+        progress.update(0, "Setting XBMC Playcounts")
+
+    for movieid, playcount in playcount_list:
+        utilities.setXBMCMoviePlaycount(movieid, playcount)
+        index += 1
+
+        if not daemon:
+            if progress.iscanceled():
+                return
+            progress.update(int(float(index)/count*100), "Setting XBMC Playcounts")
+
+
 def cleanMovies(daemon=False):
     """Cleans trakt.tv movie database.
 
@@ -49,38 +69,73 @@ def syncMovies(daemon=False):
     """
     if not daemon:
         progress = xbmcgui.DialogProgress()
-        progress.create("Trakt Utilities", __language__(1300).encode( "utf-8", "ignore" )) # Checking XBMC Database for new seen Movies
+        progress.create("Trakt Utilities", "Generating Movie Lists") # Checking XBMC Database for new seen Movies
 
     # Generate list of movies keyed with their imdb id
     trakt_movies = utilities.traktMovieListByImdbID(utilities.getMoviesFromTrakt())
     xbmc_movies = utilities.xbmcMovieListByImdbID(utilities.getMoviesFromXBMC())
 
-    playcount_update = []
-    collection_update = []
+    xbmc_playcount_update = []
+    trakt_playcount_update = []
+    trakt_collection_update = []
 
     for imdbid in xbmc_movies:
         if imdbid not in trakt_movies:
             if xbmc_movies[imdbid]['playcount'] > 0:
-                collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
-                playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
+                trakt_collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+                trakt_playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
             else:
-                collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
+                trakt_collection_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year']})
             continue
 
         if xbmc_movies[imdbid]['playcount'] > trakt_movies[imdbid]['plays']:
-            playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
+            trakt_playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
         elif xbmc_movies[imdbid]['playcount'] < trakt_movies[imdbid]['plays']:
-            utilities.setXBMCMoviePlaycount(xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays'])
+            xbmc_playcount_update.append((xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays']))
 
+    if not daemon:
+        progress.update(0, "Updating Movies On Trakt")
 
-    if len(collection_update) > 0:
-        utilities.traktJsonRequest('POST', '/movie/library/%%API_KEY%%', {'movies': collection_update})
+    if len(trakt_collection_update) > 0:
+        utilities.traktJsonRequest('POST', '/movie/library/%%API_KEY%%', {'movies': trakt_collection_update})
 
-    if len(playcount_update) > 0:
-        utilities.setMoviesSeenOnTrakt(playcount_update)
+    if len(trakt_playcount_update) > 0:
+        utilities.setMoviesSeenOnTrakt(trakt_playcount_update)
+
+    if len(xbmc_playcount_update) > 0:
+        _updateXBMCMoviePlaycounts(xbmc_playcount_update, progress, daemon)
 
     if not daemon:
         progress.close()
+
+
+def syncTV(daemon=False):
+    """Sync playcounts and collection status between trakt and xbmc.
+
+    Scans XBMC and trakt and updates the playcount of each episode in both the
+    xbmc and trakt libraries. If the episode exists in xbmc but is not collected
+    on trakt it is also set as collected on trakt.
+    """
+    # get all tv shows from xbmc -> tv_shows[tvdbid]
+    # get all seasons for each show from xbmc -> tv_shows_xbmc[tvdbid][season]
+    # get all episodes in each season from xbmc -> tv_shows_xbmc[tvdbid][season][episode] = (episodeid, playcount)
+
+    # get all watched tv shows from trakt, convert to tv_shows_trakt[tvdbid][season][episode] = True or False
+
+    #loop over xbmc shows:
+    #  show not on trakt?
+    #    add all episodes from xbmc to trakt
+    #    mark seen episodes on trakt
+    #  show on trakt?
+    #    loop over episodes on xbmc:
+    #      check also on trakt, if not add it to trakt collection
+    #      episode marked as played on xbmc:
+    #        check if marked as played on trakt, if not set it
+    #      episode marked as not played on xbmc:
+    #        check if marked as played on trakt, if not set it
+
+    pass
+
 
 # updates tvshow collection entries on trakt (no unlibrary)
 def updateTVShowCollection(daemon=False):

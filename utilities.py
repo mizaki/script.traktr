@@ -396,8 +396,7 @@ def getMovieDetailsFromXbmc(libraryId, fields):
 
 # sets the playcount of a given movie by movieid
 def setXBMCMoviePlaycount(movieid, playcount):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1})
-    xbmc.executeJSONRPC(rpccmd)
+    xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
 
 # sets the playcount of a given episode by episodeid
 def setXBMCEpisodePlaycount(episodeid, playcount):
