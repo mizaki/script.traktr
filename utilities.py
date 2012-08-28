@@ -197,13 +197,6 @@ def getMoviesFromTrakt(daemon=False):
         Debug("Error in request from 'getMoviesFromTrakt()'")
     return data
 
-# get movie that are listed as in the users collection from trakt server
-def getMovieCollectionFromTrakt(daemon=False):
-    data = traktJsonRequest('POST', '/user/library/movies/collection.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getMovieCollectionFromTrakt()'")
-    return data
-
 def xbmcMovieListByImdbID(data):
     xbmc_movies = {}
 
@@ -226,19 +219,11 @@ def traktMovieListByImdbID(data):
 # get easy access to tvshow by tvdb_id
 def traktShowListByTvdbID(data):
     trakt_tvshows = {}
-    trakt_shows_watched_json = traktJsonRequest('POST', '/user/library/shows/watched.json/%%API_KEY%%/%%USERNAME%%')
 
     for i in range(0, len(data)):
         trakt_tvshows[data[i]['tvdb_id']] = data[i]
 
     return trakt_tvshows
-
-# get tvshows from trakt server
-def getTVShowsFromTrakt(daemon=False):
-    data = traktJsonRequest('POST', '/user/library/shows/all.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getWatchedTVShowsFromTrakt()'")
-    return data
 
 # set episodes seen on trakt
 def setEpisodesSeenOnTrakt(tvdb_id, title, year, episodes):
@@ -420,54 +405,6 @@ def setXBMCEpisodePlaycount(episodeid, playcount):
     # httpapi till jsonrpc supports playcount update
     rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': playcount}, 'id': 1})
     xbmc.executeJSONRPC(rpccmd)
-
-# get current video being played from XBMC
-def getCurrentPlayingVideoFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetActivePlayers', 'params':{}, 'id': 1})
-    result = xbmc.executeJSONRPC(rpccmd)
-    result = json.loads(result)
-    # check for error
-    try:
-        error = result['error']
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: " + str(error))
-        return None
-    except KeyError:
-        pass # no error
-
-    try:
-        for player in result['result']:
-            if player['type'] == 'video':
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties', 'params':{'playerid': player['playerid'], 'properties':['playlistid', 'position']}, 'id': 1})
-                result2 = xbmc.executeJSONRPC(rpccmd)
-                result2 = json.loads(result2)
-                # check for error
-                try:
-                    error = result2['error']
-                    Debug("[Util] getCurrentPlayingVideoFromXBMC, Player.GetProperties: " + str(error))
-                    return None
-                except KeyError:
-                    pass # no error
-                playlistid = result2['result']['playlistid']
-                position = result2['result']['position']
-
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetItems', 'params':{'playlistid': playlistid}, 'id': 1})
-                result2 = xbmc.executeJSONRPC(rpccmd)
-                result2 = json.loads(result2)
-                # check for error
-                try:
-                    error = result2['error']
-                    Debug("[Util] getCurrentPlayingVideoFromXBMC, Playlist.GetItems: " + str(error))
-                    return None
-                except KeyError:
-                    pass # no error
-                Debug("Current playlist: "+str(result2['result']))
-
-                return result2['result'][position]
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: No current video player")
-        return None
-    except KeyError:
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: KeyError")
-        return None
 
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
@@ -748,18 +685,6 @@ def getTrendingTVShowsFromTrakt():
     data = traktJsonRequest('GET', '/shows/trending.json/%%API_KEY%%')
     if data == None:
         Debug("Error in request from 'getTrendingTVShowsFromTrakt()'")
-    return data
-
-def getFriendsFromTrakt():
-    data = traktJsonRequest('POST', '/user/friends.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getFriendsFromTrakt()'")
-    return data
-
-def getWatchingFromTraktForUser(name):
-    data = traktJsonRequest('POST', '/user/watching.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getWatchingFromTraktForUser()'")
     return data
 
 def playMovieById(idMovie):
