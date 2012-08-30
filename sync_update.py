@@ -256,26 +256,18 @@ def syncTV(daemon=False):
             progress.update(int(float(index)/length*100), "Syncing Shows")
 
         index += 1
-        print "1"
 
         if tvdbid not in trakt_shows:
-            print "a"
             collect_trakt_episodes, watch_trakt_episodes = _generateShowNotOnTrakt(xbmc_shows, tvdbid)
         else:
-            print "b"
             collect_trakt_episodes, watch_trakt_episodes, watched_xbmc_episodes = _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid)
 
-            print "c"
             for episodeid in watched_xbmc_episodes:
                 utilities.setXBMCEpisodePlaycount(episodeid, 1)
 
-        print "d"
-
         if collect_trakt_episodes:
-            print "e"
             utilities.traktJsonRequest('POST', '/show/episode/library/%%API_KEY%%', collect_trakt_episodes)
         if watch_trakt_episodes:
-            print "f"
             utilities.traktJsonRequest('POST', '/show/episode/seen/%%API_KEY%%', watch_trakt_episodes)
 
     if not daemon:
