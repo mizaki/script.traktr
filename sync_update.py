@@ -151,7 +151,7 @@ def _parseTraktStructure():
             trakt_shows[tvdbid]['data'][seasonid] = {}
 
             for episode in season['episodes']:
-                trakt_shows[tvdbid]['data'][seasonid][episode] = (True, False)
+                trakt_shows[tvdbid]['data'][seasonid][episode] = (True, False) # (Collected, Watched)
 
     for show in trakt_watched:
         tvdbid = show['tvdb_id']
@@ -258,7 +258,6 @@ def syncTV(daemon=False):
         index += 1
 
         if tvdbid not in trakt_shows:
-            # None of the episodes collected or watched
             collect_trakt_episodes, watch_trakt_episodes = _generateShowNotOnTrakt(xbmc_shows, tvdbid)
         else:
             collect_trakt_episodes, watch_trakt_episodes, watched_xbmc_episodes = _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid)
@@ -273,16 +272,3 @@ def syncTV(daemon=False):
 
     if not daemon:
         progress.close()
-
-    #loop over xbmc shows:
-    ##  show not on trakt?
-    ##    add all episodes from xbmc to trakt
-    ##    mark seen episodes on trakt
-    #  show on trakt?
-    #    loop over episodes on xbmc:
-    #      check also on trakt, if not add it to trakt collection
-    #      episode marked as played on xbmc:
-    #        check if also marked as played on trakt, if not set it on trakt
-    #      episode marked as not played on xbmc:
-    #        check if marked as played on trakt, if not set it on xbmc
-
