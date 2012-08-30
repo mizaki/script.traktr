@@ -269,7 +269,7 @@ def getWatchedTVShowsFromTrakt(daemon=False):
     return data
 
 def getTVShowsFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows','params':{'properties': ['title', 'year', 'imdbnumber', 'playcount']}, 'id': 1})
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows', 'params':{'properties': ['title', 'year', 'imdbnumber']}, 'id': 1})
 
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
@@ -283,36 +283,14 @@ def getTVShowsFromXBMC():
         pass # no error
 
     try:
-        return result['result']
+        return result['result']['tvshows']
     except KeyError:
         Debug("getTVShowsFromXBMC: KeyError: result['result']")
         return None
 
-# get seasons for a given tvshow from XBMC
-def getSeasonsFromXBMC(tvshow):
-    Debug("getSeasonsFromXBMC: "+str(tvshow))
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetSeasons', 'params':{'tvshowid': tvshow['tvshowid']}, 'id': 1})
-
-    result = xbmc.executeJSONRPC(rpccmd)
-    result = json.loads(result)
-
-    # check for error
-    try:
-        error = result['error']
-        Debug("getSeasonsFromXBMC: " + str(error))
-        return None
-    except KeyError:
-        pass # no error
-
-    try:
-        return result['result']
-    except KeyError:
-        Debug("getSeasonsFromXBMC: KeyError: result['result']")
-        return None
-
 # get episodes for a given tvshow / season from XBMC
-def getEpisodesFromXBMC(tvshow, season):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes', 'params':{'tvshowid': tvshow['tvshowid'], 'season': season, 'properties': ['playcount', 'episode']}, 'id': 1})
+def getEpisodesFromXBMC():
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes', 'params':{'properties': ['tvshowid', 'episode', 'season', 'playcount']}, 'id': 1})
 
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
@@ -326,7 +304,7 @@ def getEpisodesFromXBMC(tvshow, season):
         pass # no error
 
     try:
-        return result['result']
+        return result['result']['episodes']
     except KeyError:
         Debug("getEpisodesFromXBMC: KeyError: result['result']")
         return None
@@ -369,8 +347,8 @@ def getMoviesFromXBMC():
 
     try:
         return result['result']['movies']
-        Debug("getMoviesFromXBMC: KeyError: result['result']['movies']")
     except KeyError:
+        Debug("getMoviesFromXBMC: KeyError: result['result']['movies']")
         return None
 
 # get a single movie from xbmc given the id
