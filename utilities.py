@@ -383,6 +383,11 @@ def setXBMCEpisodePlaycount(episodeid, playcount):
     rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': playcount}, 'id': 1})
     xbmc.executeJSONRPC(rpccmd)
 
+def setXBMCBulkEpisodePlaycount(cmd):
+    rpccmd = json.dumps(cmd)
+    xbmc.executeJSONRPC(rpccmd)
+    print "escaped"
+
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
     if playerid == -1:

@@ -233,6 +233,15 @@ def _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid):
 
     return (collected_episodes, watched_episodes, xbmc_new_plays)
 
+
+def _sendEpisodesToTrakt(collected, watched):
+    """Send collected and watched statuses to trakt"""
+    conn = utilities.getTraktConnection()
+    for to_send in collected:
+        utilities.traktJsonRequest('POST', '/show/episode/library/%%API_KEY%%', to_send, conn=conn)
+    for to_send in watched:
+        utilities.traktJsonRequest('POST', '/show/episodes/seen/%%API_KEY%%', to_send, conn=conn)
+
 def syncTV(daemon=False):
     """Sync playcounts and collection status between trakt and xbmc.
 
@@ -240,6 +249,9 @@ def syncTV(daemon=False):
     xbmc and trakt libraries. If the episode exists in xbmc but is not collected
     on trakt it is also set as collected on trakt.
     """
+
+    collect_episodes = []
+    watch_episodes = []
 
     if not daemon:
         progress = xbmcgui.DialogProgress()
@@ -262,13 +274,21 @@ def syncTV(daemon=False):
         else:
             collect_trakt_episodes, watch_trakt_episodes, watched_xbmc_episodes = _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid)
 
+            xbmc_update = []
             for episodeid in watched_xbmc_episodes:
-                utilities.setXBMCEpisodePlaycount(episodeid, 1)
+                xbmc_update.append({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': 1}, 'id': 1})
+            if len(xbmc_update) > 0:
+                utilities.setXBMCBulkEpisodePlaycount(xbmc_update)
 
         if collect_trakt_episodes:
-            utilities.traktJsonRequest('POST', '/show/episode/library/%%API_KEY%%', collect_trakt_episodes)
+            collect_episodes.append(collect_trakt_episodes)
         if watch_trakt_episodes:
-            utilities.traktJsonRequest('POST', '/show/episode/seen/%%API_KEY%%', watch_trakt_episodes)
+            watch_episodes.append(watch_trakt_episodes)
+
+    if not daemon:
+        progress.update(0, "Sending Data To Trakt")
+
+    _sendEpisodesToTrakt(collect_episodes, watch_episodes)
 
     if not daemon:
         progress.close()
