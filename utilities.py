@@ -48,6 +48,14 @@ def Debug(msg, force=False):
             print "Trakt Utilities: " + msg.encode( "utf-8", "ignore" )
 
 
+def getXBMCMajorVersion():
+    """Get the major version number of the xbmc instance running
+
+    10 = Dhama, 11 = Eden, 12 = Frodo
+    """
+    return int(xbmc.getInfoLabel("System.BuildVersion").split(".")[0])
+
+
 def notification(header, message, time=5000, icon=__settings__.getAddonInfo("icon")):
     xbmc.executebuiltin( "XBMC.Notification(%s,%s,%i,%s)" % ( header, message, time, icon ) )
 
@@ -374,20 +382,20 @@ def getMovieDetailsFromXbmc(libraryId, fields):
 
 # sets the playcount of a given movie by movieid
 def setXBMCMoviePlaycount(movieid, playcount):
-    xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
+    if getXBMCMajorVersion() >= 12:
+        xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
+    else:
+        pass
 
-# sets the playcount of a given episode by episodeid
-def setXBMCEpisodePlaycount(episodeid, playcount):
-
-    # httpapi till jsonrpc supports playcount update
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': playcount}, 'id': 1})
-    xbmc.executeJSONRPC(rpccmd)
 
 def setXBMCBulkEpisodePlaycount(cmd):
-    rpccmd = json.dumps(cmd)
-    time.sleep(0.2)
-    xbmc.executeJSONRPC(rpccmd)
-    time.sleep(0.2)
+    if getXBMCMajorVersion() >= 12:
+        rpccmd = json.dumps(cmd)
+        time.sleep(0.2)
+        xbmc.executeJSONRPC(rpccmd)
+        time.sleep(0.2)
+    else:
+        pass
 
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
@@ -424,7 +432,7 @@ def getPlaylistLengthFromXBMCPlayer(playerid):
 def getMovieIdFromXBMC(imdb_id, title):
     rpccmd = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "VideoLibrary.GetMovies", "params": { "properties": ["imdbnumber"]}})
     result = json.loads(xbmc.executeJSONRPC(rpccmd))
-    result = result["movies"]
+    result = result["result"]["movies"]
 
     for movie in result:
         if movie["imdbnumber"] == imdb_id:
@@ -436,7 +444,7 @@ def getMovieIdFromXBMC(imdb_id, title):
 def getShowIdFromXBMC(tvdb_id, title):
     rpccmd = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "VideoLibrary.GetTVShows", "params": { "properties": ["imdbnumber"]}})
     result = json.loads(xbmc.executeJSONRPC(rpccmd))
-    result = result["tvshows"]
+    result = result["result"]["tvshows"]
 
     for tvshow in result:
         if tvshow["imdbnumber"] == tvdb_id:
