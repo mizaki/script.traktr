@@ -388,7 +388,9 @@ def getMovieDetailsFromXbmc(libraryId, fields):
 # sets the playcount of a given movie by movieid
 def setXBMCMoviePlaycount(movieid, playcount, imdb_id):
     if getXBMCMajorVersion() >= 12:
+        time.sleep(0.2)
         xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
+        time.sleep(0.2)
     else:
         match = raw_xbmc_database.RawXbmcDb.query(
         "SELECT movie.idFile FROM movie"+
