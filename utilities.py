@@ -47,8 +47,14 @@ def Debug(msg, force=False):
         except UnicodeEncodeError:
             print "Trakt Utilities: " + msg.encode( "utf-8", "ignore" )
 
-#This class needs debug
-from raw_xbmc_database import RawXbmcDb
+
+def getXBMCMajorVersion():
+    """Get the major version number of the xbmc instance running
+
+    10 = Dhama, 11 = Eden, 12 = Frodo
+    """
+    return int(xbmc.getInfoLabel("System.BuildVersion").split(".")[0])
+
 
 def notification(header, message, time=5000, icon=__settings__.getAddonInfo("icon")):
     xbmc.executebuiltin( "XBMC.Notification(%s,%s,%i,%s)" % ( header, message, time, icon ) )
@@ -79,10 +85,6 @@ def checkSettings(daemon=False):
         return False
 
     return True
-
-# SQL string quote escaper
-def xcp(sql):
-    return re.sub('''(['])''', r"''", unicode(sql))
 
 # get a connection to trakt
 def getTraktConnection():
@@ -203,12 +205,13 @@ def getMoviesFromTrakt(daemon=False):
         Debug("Error in request from 'getMoviesFromTrakt()'")
     return data
 
-# get movie that are listed as in the users collection from trakt server
-def getMovieCollectionFromTrakt(daemon=False):
-    data = traktJsonRequest('POST', '/user/library/movies/collection.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getMovieCollectionFromTrakt()'")
-    return data
+def xbmcMovieListByImdbID(data):
+    xbmc_movies = {}
+
+    for i in range(0, len(data)):
+        xbmc_movies[data[i]['imdbnumber']] = data[i]
+
+    return xbmc_movies
 
 # get easy access to movie by imdb_id
 def traktMovieListByImdbID(data):
@@ -229,13 +232,6 @@ def traktShowListByTvdbID(data):
         trakt_tvshows[data[i]['tvdb_id']] = data[i]
 
     return trakt_tvshows
-
-# get seen tvshows from trakt server
-def getWatchedTVShowsFromTrakt(daemon=False):
-    data = traktJsonRequest('POST', '/user/library/shows/watched.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getWatchedTVShowsFromTrakt()'")
-    return data
 
 # set episodes seen on trakt
 def setEpisodesSeenOnTrakt(tvdb_id, title, year, episodes):
@@ -274,9 +270,14 @@ def getTVShowCollectionFromTrakt(daemon=False):
         Debug("Error in request from 'getTVShowCollectionFromTrakt()'")
     return data
 
-# get tvshows from XBMC
+def getWatchedTVShowsFromTrakt(daemon=False):
+    data = traktJsonRequest('POST', '/user/library/shows/watched.json/%%API_KEY%%/%%USERNAME%%')
+    if data == None:
+        Debug("Error in request from 'getWatchedTVShowsFromTrakt()'")
+    return data
+
 def getTVShowsFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows', 'params':{'properties': ['title', 'year', 'imdbnumber', 'playcount']}, 'id': 1})
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetTVShows', 'params':{'properties': ['title', 'year', 'imdbnumber']}, 'id': 1})
 
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
@@ -290,36 +291,14 @@ def getTVShowsFromXBMC():
         pass # no error
 
     try:
-        return result['result']
+        return result['result']['tvshows']
     except KeyError:
         Debug("getTVShowsFromXBMC: KeyError: result['result']")
         return None
 
-# get seasons for a given tvshow from XBMC
-def getSeasonsFromXBMC(tvshow):
-    Debug("getSeasonsFromXBMC: "+str(tvshow))
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetSeasons', 'params':{'tvshowid': tvshow['tvshowid']}, 'id': 1})
-
-    result = xbmc.executeJSONRPC(rpccmd)
-    result = json.loads(result)
-
-    # check for error
-    try:
-        error = result['error']
-        Debug("getSeasonsFromXBMC: " + str(error))
-        return None
-    except KeyError:
-        pass # no error
-
-    try:
-        return result['result']
-    except KeyError:
-        Debug("getSeasonsFromXBMC: KeyError: result['result']")
-        return None
-
 # get episodes for a given tvshow / season from XBMC
-def getEpisodesFromXBMC(tvshow, season):
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes', 'params':{'tvshowid': tvshow['tvshowid'], 'season': season, 'properties': ['playcount', 'episode']}, 'id': 1})
+def getEpisodesFromXBMC():
+    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.GetEpisodes', 'params':{'properties': ['tvshowid', 'episode', 'season', 'playcount']}, 'id': 1})
 
     result = xbmc.executeJSONRPC(rpccmd)
     result = json.loads(result)
@@ -333,7 +312,7 @@ def getEpisodesFromXBMC(tvshow, season):
         pass # no error
 
     try:
-        return result['result']
+        return result['result']['episodes']
     except KeyError:
         Debug("getEpisodesFromXBMC: KeyError: result['result']")
         return None
@@ -376,8 +355,8 @@ def getMoviesFromXBMC():
 
     try:
         return result['result']['movies']
-        Debug("getMoviesFromXBMC: KeyError: result['result']['movies']")
     except KeyError:
+        Debug("getMoviesFromXBMC: KeyError: result['result']['movies']")
         return None
 
 # get a single movie from xbmc given the id
@@ -401,92 +380,22 @@ def getMovieDetailsFromXbmc(libraryId, fields):
         Debug("getMovieDetailsFromXbmc: KeyError: result['result']['moviedetails']")
         return None
 
-# sets the playcount of a given movie by imdbid
-def setXBMCMoviePlaycount(imdb_id, playcount):
+# sets the playcount of a given movie by movieid
+def setXBMCMoviePlaycount(movieid, playcount):
+    if getXBMCMajorVersion() >= 12:
+        xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
+    else:
+        pass
 
-    # httpapi till jsonrpc supports playcount update
-    # c09 => IMDB ID
-    match = RawXbmcDb.query(
-    "SELECT movie.idFile FROM movie"+
-    " WHERE movie.c09='%(imdb_id)s'" % {'imdb_id':xcp(imdb_id)})
 
-    if not match:
-        #add error message here
-        return
-
-    try:
-        match[0][0]
-    except KeyError:
-        return
-
-    RawXbmcDb.execute(
-    "UPDATE files"+
-    " SET playcount=%(playcount)d" % {'playcount':int(playcount)}+
-    " WHERE idFile=%(idFile)s" % {'idFile':xcp(match[0][0])})
-
-# sets the playcount of a given episode by tvdb_id
-def setXBMCEpisodePlaycount(tvdb_id, seasonid, episodeid, playcount):
-    # httpapi till jsonrpc supports playcount update
-    RawXbmcDb.execute(
-    "UPDATE files"+
-    " SET playcount=%(playcount)s" % {'playcount':xcp(playcount)}+
-    " WHERE idFile IN ("+
-    "  SELECT idFile"+
-    "  FROM episode"+
-    "  INNER JOIN tvshowlinkepisode ON episode.idEpisode = tvshowlinkepisode.idEpisode"+
-    "   INNER JOIN tvshow ON tvshowlinkepisode.idShow = tvshow.idShow"+
-    "   WHERE tvshow.c12='%(tvdb_id)s'" % {'tvdb_id':xcp(tvdb_id)}+
-    "    AND episode.c12='%(seasonid)s'" % {'seasonid':xcp(seasonid)}+
-    "    AND episode.c13='%(episodeid)s'" % {'episodeid':xcp(episodeid)}+
-    " )")
-
-# get current video being played from XBMC
-def getCurrentPlayingVideoFromXBMC():
-    rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetActivePlayers','params':{}, 'id': 1})
-    result = xbmc.executeJSONRPC(rpccmd)
-    result = json.loads(result)
-    # check for error
-    try:
-        error = result['error']
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: " + str(error))
-        return None
-    except KeyError:
-        pass # no error
-
-    try:
-        for player in result['result']:
-            if player['type'] == 'video':
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Player.GetProperties', 'params':{'playerid': player['playerid'], 'properties':['playlistid', 'position']}, 'id': 1})
-                result2 = xbmc.executeJSONRPC(rpccmd)
-                result2 = json.loads(result2)
-                # check for error
-                try:
-                    error = result2['error']
-                    Debug("[Util] getCurrentPlayingVideoFromXBMC, Player.GetProperties: " + str(error))
-                    return None
-                except KeyError:
-                    pass # no error
-                playlistid = result2['result']['playlistid']
-                position = result2['result']['position']
-
-                rpccmd = json.dumps({'jsonrpc': '2.0', 'method': 'Playlist.GetItems', 'params':{'playlistid': playlistid}, 'id': 1})
-                result2 = xbmc.executeJSONRPC(rpccmd)
-                result2 = json.loads(result2)
-                # check for error
-                try:
-                    error = result2['error']
-                    Debug("[Util] getCurrentPlayingVideoFromXBMC, Playlist.GetItems: " + str(error))
-                    return None
-                except KeyError:
-                    pass # no error
-                Debug("Current playlist: "+str(result2['result']))
-
-                return result2['result'][position]
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: No current video player")
-        return None
-    except KeyError:
-        Debug("[Util] getCurrentPlayingVideoFromXBMC: KeyError")
-        return None
+def setXBMCBulkEpisodePlaycount(cmd):
+    if getXBMCMajorVersion() >= 12:
+        rpccmd = json.dumps(cmd)
+        time.sleep(0.2)
+        xbmc.executeJSONRPC(rpccmd)
+        time.sleep(0.2)
+    else:
+        pass
 
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
@@ -521,43 +430,27 @@ def getPlaylistLengthFromXBMCPlayer(playerid):
     return result['result']['size']
 
 def getMovieIdFromXBMC(imdb_id, title):
-    # httpapi till jsonrpc supports searching for a single movie
-    # Get id of movie by movies IMDB
-    Debug("Searching for movie: "+imdb_id+", "+title)
+    rpccmd = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "VideoLibrary.GetMovies", "params": { "properties": ["imdbnumber"]}})
+    result = json.loads(xbmc.executeJSONRPC(rpccmd))
+    result = result["result"]["movies"]
 
-    match = RawXbmcDb.query(
-    " SELECT idMovie FROM movie"+
-    "  WHERE c09='%(imdb_id)s'" % {'imdb_id':imdb_id}+
-    " UNION"+
-    " SELECT idMovie FROM movie"+
-    "  WHERE upper(c00)='%(title)s'" % {'title':xcp(title.upper())}+
-    " LIMIT 1")
+    for movie in result:
+        if movie["imdbnumber"] == imdb_id:
+            return movie["movieid"]
 
-    if not match:
-        Debug("getMovieIdFromXBMC: cannot find movie in database")
-        return -1
+    return -1
 
-    return match[0]
 
 def getShowIdFromXBMC(tvdb_id, title):
-    # httpapi till jsonrpc supports searching for a single show
-    # Get id of show by shows tvdb id
+    rpccmd = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "VideoLibrary.GetTVShows", "params": { "properties": ["imdbnumber"]}})
+    result = json.loads(xbmc.executeJSONRPC(rpccmd))
+    result = result["result"]["tvshows"]
 
-    Debug("Searching for show: "+str(tvdb_id)+", "+title)
+    for tvshow in result:
+        if tvshow["imdbnumber"] == tvdb_id:
+            return tvshow["tvshowid"]
 
-    match = RawXbmcDb.query(
-    " SELECT idShow FROM tvshow"+
-    "  WHERE c12='%(tvdb_id)s'" % {'tvdb_id':xcp(tvdb_id)}+
-    " UNION"+
-    " SELECT idShow FROM tvshow"+
-    "  WHERE upper(c00)='%(title)s'" % {'title':xcp(title.upper())}+
-    " LIMIT 1")
-
-    if not match:
-        Debug("getShowIdFromXBMC: cannot find movie in database")
-        return -1
-
-    return match[0]
+    return -1
 
 # returns list of movies from watchlist
 def getWatchlistMoviesFromTrakt():
@@ -783,18 +676,6 @@ def getTrendingTVShowsFromTrakt():
     data = traktJsonRequest('GET', '/shows/trending.json/%%API_KEY%%')
     if data == None:
         Debug("Error in request from 'getTrendingTVShowsFromTrakt()'")
-    return data
-
-def getFriendsFromTrakt():
-    data = traktJsonRequest('POST', '/user/friends.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getFriendsFromTrakt()'")
-    return data
-
-def getWatchingFromTraktForUser(name):
-    data = traktJsonRequest('POST', '/user/watching.json/%%API_KEY%%/%%USERNAME%%')
-    if data == None:
-        Debug("Error in request from 'getWatchingFromTraktForUser()'")
     return data
 
 def playMovieById(idMovie):

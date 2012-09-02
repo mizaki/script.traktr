@@ -48,7 +48,7 @@ def menu():
 
 
 def submenuUpdateSyncClean():
-    options = [__language__(1217).encode( "utf-8", "ignore" ), __language__(1218).encode( "utf-8", "ignore" ), __language__(1219).encode( "utf-8", "ignore" ), __language__(1220).encode( "utf-8", "ignore" ), __language__(1221).encode( "utf-8", "ignore" ), __language__(1222).encode( "utf-8", "ignore" )]
+    options = [__language__(1218).encode( "utf-8", "ignore" ), __language__(1220).encode( "utf-8", "ignore" ), __language__(1221).encode( "utf-8", "ignore" ), __language__(1222).encode( "utf-8", "ignore" )]
 
     while True:
         select = xbmcgui.Dialog().select("Trakt Utilities", options)
@@ -56,17 +56,13 @@ def submenuUpdateSyncClean():
         if select == -1:
             Debug ("menu quit by user")
             return
-        elif select == 0: # Update Movie Collection
-            su.updateMovieCollection()
-        elif select == 1: # Sync seen Movies
-            su.syncSeenMovies()
-        elif select == 2: # Update TV Show Collection
-            su.updateTVShowCollection()
-        elif select == 3: # Sync seen TV Shows
-            su.syncSeenTVShows()
-        elif select == 4: # Clean Movie Collection
-            su.cleanMovieCollection()
-        elif select == 5: # Clean TV Show Collection
+        elif select == 0: # Sync Movies
+            su.syncMovies()
+        elif select == 1: # Sync TV Shows
+            su.syncTV()
+        elif select == 2: # Clean Movie Collection
+            su.cleanMovies()
+        elif select == 3: # Clean TV Show Collection
             su.cleanTVShowCollection()
 
 def submenuTrendingMoviesTVShows():

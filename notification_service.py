@@ -11,7 +11,6 @@ try:
 except ImportError:
     import json
 
-import instant_sync
 from scrobbler import Scrobbler
 from utilities import Debug
 
@@ -46,9 +45,6 @@ class NotificationService(threading.Thread):
                 self._scrobbler.playbackStarted(notification['params']['data'])
         elif notification['method'] == 'Player.OnPause':
             self._scrobbler.playbackPaused()
-        elif notification['method'] == 'VideoLibrary.OnUpdate':
-            if 'data' in notification['params'] and 'playcount' in notification['params']['data']:
-                instant_sync.instantSyncPlayCount(notification)
         elif notification['method'] == 'System.OnQuit':
             self._abortRequested = True
 
