@@ -28,8 +28,8 @@ def _updateXBMCMoviePlaycounts(playcount_list, progress, daemon):
     if not daemon:
         progress.update(0, "Setting XBMC Playcounts")
 
-    for movieid, playcount in playcount_list:
-        utilities.setXBMCMoviePlaycount(movieid, playcount)
+    for movieid, playcount, imdbid in playcount_list:
+        utilities.setXBMCMoviePlaycount(movieid, playcount, imdbid)
         index += 1
 
         if not daemon:
@@ -87,7 +87,7 @@ def syncMovies(daemon=False):
         if xbmc_movies[imdbid]['playcount'] > trakt_movies[imdbid]['plays']:
             trakt_playcount_update.append({'imdb_id': imdbid, 'title': xbmc_movies[imdbid]['title'], 'year': xbmc_movies[imdbid]['year'], 'plays': xbmc_movies[imdbid]['playcount'], 'last_played': xbmc_movies[imdbid]['lastplayed']})
         elif xbmc_movies[imdbid]['playcount'] < trakt_movies[imdbid]['plays']:
-            xbmc_playcount_update.append((xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays']))
+            xbmc_playcount_update.append((xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays'], imdbid))
 
     if not daemon:
         progress.update(0, "Updating Movies On Trakt")
@@ -201,6 +201,9 @@ def _generateShowNotOnTrakt(shows, tvdbid):
 
 def _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid):
     """Generate the collected and watched episodes from both XBMC and Trakt for a show that's on trakt"""
+
+    version = utilities.getXBMCMajorVersion()
+
     watched_episodes = {}
     collected_episodes = {}
 
@@ -224,7 +227,10 @@ def _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid):
             if not trakt_played and xbmc_played > 0:
                 watched_episodes['episodes'].append({'season': season_num, 'episode': episode_num})
             if xbmc_played == 0 and trakt_played:
-                xbmc_new_plays.append(xbmc_episodeid)
+                if version >= 12:
+                    xbmc_new_plays.append(xbmc_episodeid)
+                else:
+                    xbmc_new_plays.append((tvdbid, season_num, episode_num))
 
     if len(watched_episodes['episodes']) == 0:
         watched_episodes = None
@@ -240,7 +246,7 @@ def _sendEpisodesToTrakt(collected, watched):
     for to_send in collected:
         utilities.traktJsonRequest('POST', '/show/episode/library/%%API_KEY%%', to_send, conn=conn)
     for to_send in watched:
-        utilities.traktJsonRequest('POST', '/show/episodes/seen/%%API_KEY%%', to_send, conn=conn)
+        utilities.traktJsonRequest('POST', '/show/episode/seen/%%API_KEY%%', to_send, conn=conn)
 
 def syncTV(daemon=False):
     """Sync playcounts and collection status between trakt and xbmc.
@@ -249,6 +255,8 @@ def syncTV(daemon=False):
     xbmc and trakt libraries. If the episode exists in xbmc but is not collected
     on trakt it is also set as collected on trakt.
     """
+
+    version = utilities.getXBMCMajorVersion()
 
     collect_episodes = []
     watch_episodes = []
@@ -274,11 +282,16 @@ def syncTV(daemon=False):
         else:
             collect_trakt_episodes, watch_trakt_episodes, watched_xbmc_episodes = _generateShowOnTrakt(xbmc_shows, trakt_shows, tvdbid)
 
-            xbmc_update = []
-            for episodeid in watched_xbmc_episodes:
-                xbmc_update.append({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': 1}, 'id': 1})
-            if len(xbmc_update) > 0:
-                utilities.setXBMCBulkEpisodePlaycount(xbmc_update)
+            if version >= 12:
+                xbmc_update = []
+                for episodeid in watched_xbmc_episodes:
+                    xbmc_update.append({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetEpisodeDetails', 'params':{'episodeid': episodeid, 'playcount': 1}, 'id': 1})
+
+                if len(xbmc_update) > 0:
+                    utilities.setXBMCBulkEpisodePlaycount(xbmc_update)
+            else:
+                for tvdbid_new, season_num_new, episode_num_new in watched_xbmc_episodes:
+                    utilities.setXBMCEpisodePlaycount(tvdbid_new, season_num_new, episode_num_new, 1)
 
         if collect_trakt_episodes:
             collect_episodes.append(collect_trakt_episodes)

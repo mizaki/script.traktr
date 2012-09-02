@@ -48,6 +48,9 @@ def Debug(msg, force=False):
             print "Trakt Utilities: " + msg.encode( "utf-8", "ignore" )
 
 
+import raw_xbmc_database
+
+
 def getXBMCMajorVersion():
     """Get the major version number of the xbmc instance running
 
@@ -55,6 +58,8 @@ def getXBMCMajorVersion():
     """
     return int(xbmc.getInfoLabel("System.BuildVersion").split(".")[0])
 
+def xcp(s):
+    return re.sub('''(['])''', r"''", unicode(s))
 
 def notification(header, message, time=5000, icon=__settings__.getAddonInfo("icon")):
     xbmc.executebuiltin( "XBMC.Notification(%s,%s,%i,%s)" % ( header, message, time, icon ) )
@@ -381,21 +386,52 @@ def getMovieDetailsFromXbmc(libraryId, fields):
         return None
 
 # sets the playcount of a given movie by movieid
-def setXBMCMoviePlaycount(movieid, playcount):
+def setXBMCMoviePlaycount(movieid, playcount, imdb_id):
     if getXBMCMajorVersion() >= 12:
         xbmc.executeJSONRPC(json.dumps({'jsonrpc': '2.0', 'method': 'VideoLibrary.SetMovieDetails', 'params':{'movieid': movieid, 'playcount': playcount}, 'id': 1}))
     else:
-        pass
+        match = raw_xbmc_database.RawXbmcDb.query(
+        "SELECT movie.idFile FROM movie"+
+        " WHERE movie.c09='%(imdb_id)s'" % {'imdb_id':xcp(imdb_id)})
+
+        if not match:
+            #add error message here
+            return
+
+        try:
+            match[0][0]
+        except KeyError:
+            return
+
+        raw_xbmc_database.RawXbmcDb.execute(
+        "UPDATE files"+
+        " SET playcount=%(playcount)d" % {'playcount':int(playcount)}+
+        " WHERE idFile=%(idFile)s" % {'idFile':xcp(match[0][0])})
 
 
+# >= 12
 def setXBMCBulkEpisodePlaycount(cmd):
-    if getXBMCMajorVersion() >= 12:
-        rpccmd = json.dumps(cmd)
-        time.sleep(0.2)
-        xbmc.executeJSONRPC(rpccmd)
-        time.sleep(0.2)
-    else:
-        pass
+    rpccmd = json.dumps(cmd)
+    time.sleep(0.2)
+    xbmc.executeJSONRPC(rpccmd)
+    time.sleep(0.2)
+
+# <12
+# sets the playcount of a given episode by tvdb_id
+def setXBMCEpisodePlaycount(tvdb_id, seasonid, episodeid, playcount):
+    # httpapi till jsonrpc supports playcount update
+    raw_xbmc_database.RawXbmcDb.execute(
+    "UPDATE files"+
+    " SET playcount=%(playcount)s" % {'playcount':xcp(playcount)}+
+    " WHERE idFile IN ("+
+    "  SELECT idFile"+
+    "  FROM episode"+
+    "  INNER JOIN tvshowlinkepisode ON episode.idEpisode = tvshowlinkepisode.idEpisode"+
+    "   INNER JOIN tvshow ON tvshowlinkepisode.idShow = tvshow.idShow"+
+    "   WHERE tvshow.c12='%(tvdb_id)s'" % {'tvdb_id':xcp(tvdb_id)}+
+    "    AND episode.c12='%(seasonid)s'" % {'seasonid':xcp(seasonid)}+
+    "    AND episode.c13='%(episodeid)s'" % {'episodeid':xcp(episodeid)}+
+    " )")
 
 # get the length of the current video playlist being played from XBMC
 def getPlaylistLengthFromXBMCPlayer(playerid):
