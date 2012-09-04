@@ -43,7 +43,11 @@ def doRateMovie(movieid=None, imdbid=None, title=None, year=None):
 
     # display rate dialog
     import windows
-    gui = windows.RateMovieDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+    if utilities.getTraktRatingType() == "advanced":
+        gui = windows.RateMovieDialog("rate_advanced.xml", __settings__.getAddonInfo('path'), "Default")
+    else:
+        gui = windows.RateMovieDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+
     gui.initDialog(imdbid, title, year, utilities.getMovieRatingFromTrakt(imdbid, title, year))
     gui.doModal()
     del gui
@@ -63,7 +67,11 @@ def doRateEpisode(episodeId):
 
     # display rate dialog
     import windows
-    gui = windows.RateEpisodeDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+    if utilities.getTraktRatingType() == "advanced":
+        gui = windows.RateEpisodeDialog("rate_advanced.xml", __settings__.getAddonInfo('path'), "Default")
+    else:
+        gui = windows.RateEpisodeDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+
     gui.initDialog(tvdbid, title, year, season, episode, utilities.getEpisodeRatingFromTrakt(tvdbid, title, year, season, episode))
     gui.doModal()
     del gui

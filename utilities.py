@@ -50,6 +50,11 @@ def Debug(msg, force=False):
 
 import raw_xbmc_database
 
+def getTraktRatingType():
+    """Get the rating type set on trakt, either simple or advanced"""
+    data = traktJsonRequest('POST', '/account/settings/%%API_KEY%%')
+    return data['viewing']['ratings']['mode']
+
 
 def getXBMCMajorVersion():
     """Get the major version number of the xbmc instance running
@@ -586,7 +591,7 @@ def removeTVShowsFromWatchlist(data):
 
 #Set the rating for a movie on trakt, rating: "hate" = Weak sauce, "love" = Totaly ninja
 def rateMovieOnTrakt(imdbid, title, year, rating):
-    if not (rating in ("love", "hate", "unrate")):
+    if not (rating in ("love", "hate", "unrate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")):
         #add error message
         return
 
@@ -622,7 +627,7 @@ def getMovieRatingFromTrakt(imdbid, title, year):
 
 #Set the rating for a tv episode on trakt, rating: "hate" = Weak sauce, "love" = Totaly ninja
 def rateEpisodeOnTrakt(tvdbid, title, year, season, episode, rating):
-    if not (rating in ("love", "hate", "unrate")):
+    if not (rating in ("love", "hate", "unrate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")):
         #add error message
         return
 
@@ -658,7 +663,7 @@ def getEpisodeRatingFromTrakt(tvdbid, title, year, season, episode):
 
 #Set the rating for a tv show on trakt, rating: "hate" = Weak sauce, "love" = Totaly ninja
 def rateShowOnTrakt(tvdbid, title, year, rating):
-    if not (rating in ("love", "hate", "unrate")):
+    if not (rating in ("love", "hate", "unrate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")):
         #add error message
         return
 
