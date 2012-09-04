@@ -266,9 +266,9 @@ def _updateXBMCEpisodePlaycounts(watched_episodes):
 
         if len(xbmc_update) > 0:
             utilities.setXBMCBulkEpisodePlaycount(xbmc_update)
-        else:
-            for tvdbid, season_num, episode_num in watched_episodes:
-                utilities.setXBMCEpisodePlaycount(tvdbid, season_num, episode_num, 1)
+    else:
+        for tvdbid, season_num, episode_num in watched_episodes:
+            utilities.setXBMCEpisodePlaycount(tvdbid, season_num, episode_num, 1)
 
 
 def syncTV(daemon=False):
