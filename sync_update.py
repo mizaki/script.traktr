@@ -105,7 +105,10 @@ def syncMovies(daemon=False):
         utilities.setMoviesSeenOnTrakt(trakt_playcount_update)
 
     if len(xbmc_playcount_update) > 0:
-        _updateXBMCMoviePlaycounts(xbmc_playcount_update, progress, daemon)
+        if not daemon:
+            _updateXBMCMoviePlaycounts(xbmc_playcount_update, None, False)
+        else:
+            _updateXBMCMoviePlaycounts(xbmc_playcount_update, progress, daemon)
 
     if not daemon:
         progress.close()
