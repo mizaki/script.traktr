@@ -50,8 +50,14 @@ def cleanMovies(daemon=False):
     xbmc_movies = utilities.xbmcMovieListByImdbID(utilities.getMoviesFromXBMC())
 
     clean_list = []
+    index = 0
+    length = len(trakt_movies)
 
     for imdbid in trakt_movies:
+        if not daemon:
+            index += 1
+            progress.update(int(float(index)/length*100), "Cleaning Movies")
+
         if imdbid not in xbmc_movies:
             clean_list.append({'imdb_id': imdbid, 'title': trakt_movies[imdbid]['title'], 'year': trakt_movies[imdbid]['year']})
 
@@ -353,8 +359,8 @@ def cleanTV(daemon=False):
     index = 0
 
     for tvdbid in trakt_shows:
-        index += 1
         if not daemon:
+            index += 1
             progress.update(int(float(index)/length*100), "Cleaning Shows")
 
         if tvdbid not in xbmc_shows:
