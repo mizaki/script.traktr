@@ -9,9 +9,8 @@
     <category label="1020"><!-- Auto Sync -->
         <setting id="autosync_movies" type="bool" label="1021" default="false"/>
         <setting id="autosync_cleanmoviecollection" type="bool" label="1025" default="false"/>
-        <setting id="autosync_tvshowcollection" type="bool" label="1022" default="false"/>
+        <setting id="autosync_tv" type="bool" label="1022" default="false"/>
         <setting id="autosync_cleantvshowcollection" type="bool" label="1026" default="false"/>
-        <setting id="autosync_seentvshows" type="bool" label="1024" default="false"/>
     </category>
     <category label="1030"><!-- Rating -->
         <setting id="rate_movie" type="bool" label="1031" default="true"/>

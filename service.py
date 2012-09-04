@@ -49,7 +49,7 @@ def autostart():
 
                 su.syncTV(True)
                 if autosync_cleantvshowcollection:
-                    su.cleanTV(True)
+                    su.cleanTV(daemon=True)
             if xbmc.abortRequested:
                 raise SystemExit()
 
