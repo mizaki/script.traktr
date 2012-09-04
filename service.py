@@ -28,14 +28,13 @@ def autostart():
         notificationThread.start()
 
         autosync_movies = __settings__.getSetting("autosync_movies")
-        autosync_tvshowcollection = __settings__.getSetting("autosync_tvshowcollection")
-        autosync_cleanmoviecollection = __settings__.getSetting("autosync_cleanmoviecollection")
-        autosync_cleantvshowcollection = __settings__.getSetting("autosync_cleantvshowcollection")
-        autosync_seentvshows = __settings__.getSetting("autosync_seentvshows")
+        autosync_tv = __settings__.getSetting("autosync_tv")
+        autosync_cleanmoviecollection = __settings__.getSetting("autosync_cleanmovies")
+        autosync_cleantvshowcollection = __settings__.getSetting("autosync_cleantv")
         try:
             if autosync_movies == "true":
                 Debug("autostart sync seen movies")
-                utilities.notification("Trakt Utilities", __language__(1182).encode( "utf-8", "ignore" )) # start sync movies
+                utilities.notification("Trakt Utilities", "Syncing Movies") # start sync movies
 
                 su.syncMovies(daemon=True)
 
@@ -45,23 +44,17 @@ def autostart():
             if xbmc.abortRequested:
                 raise SystemExit()
 
-            if autosync_tvshowcollection == "true":
-                utilities.notification("Trakt Utilities", __language__(1181).encode( "utf-8", "ignore" )) # start tvshow collection update
-                su.updateTVShowCollection(True)
+            if autosync_tv == "true":
+                utilities.notification("Trakt Utilities", "Syncing TV") # start tvshow collection update
+
+                su.syncTV(True)
                 if autosync_cleantvshowcollection:
-                    su.cleanTVShowCollection(True)
+                    su.cleanTV(True)
             if xbmc.abortRequested:
                 raise SystemExit()
 
-            if autosync_seentvshows == "true":
-                Debug("autostart sync seen tvshows")
-                utilities.notification("Trakt Utilities", __language__(1183).encode( "utf-8", "ignore" )) # start sync seen tv shows
-                su.syncSeenTVShows(True)
-            if xbmc.abortRequested:
-                raise SystemExit()
-
-            if autosync_tvshowcollection == "true" or autosync_movies == "true" or autosync_seentvshows == "true":
-                utilities.notification("Trakt Utilities", __language__(1184).encode( "utf-8", "ignore" )) # update / sync done
+            if autosync_tv == "true" or autosync_movies == "true":
+                utilities.notification("Trakt Utilities", "Sync Complete") # update / sync done
         except SystemExit:
             notificationThread.abortRequested = True
             Debug("[Service] Auto sync processes aborted due to shutdown request")

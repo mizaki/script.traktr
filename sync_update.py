@@ -320,3 +320,47 @@ def syncTV(daemon=False):
 
     if not daemon:
         progress.close()
+
+def _cleanShow(tvdbid, trakt_shows):
+    """ Remove an entire show from the trakt library """
+    to_send = {'tvdb_id': tvdbid, 'title': trakt_shows[tvdbid]['title'], 'year': trakt_shows[tvdbid]['year']}
+    utilities.traktJsonRequest('POST', '/show/unlibrary/%%API_KEY%%', to_send)
+
+
+def _cleanShowDiff(tvdbid, trakt_shows, xbmc_shows):
+    """ Remove show episodes not on xbmc from the trakt library """
+    to_send = {'tvdb_id': tvdbid, 'title': trakt_shows[tvdbid]['title'], 'year': trakt_shows[tvdbid]['year'], 'episodes': {}}
+    xbmc_show = xbmc_shows[tvdbid]['data']
+    trakt_show = trakt_shows[tvdbid]['data']
+
+    for season_num in trakt_show:
+        for episode_num in trakt_show[season_num]:
+            if trakt_show[season_num][episode_num][0] == True and (season_num not in xbmc_show or episode_num not in xbmc_show[season_num]):
+                to_send['episodes'].append({'season': season_num, 'episode': episode_num})
+
+    utilities.traktJsonRequest('POST', '/show/episode/unlibrary', to_send)
+
+
+def cleanTV(daemon=False):
+    """Remove any shows and episodes on trakt that aren't in the XBMC library"""
+    if not daemon:
+        progress = xbmcgui.DialogProgress()
+        progress.create("Trakt Utilities", "Generating TV Episode Lists")
+
+    xbmc_shows = _parseXBMCStructure()
+    trakt_shows = _parseTraktStructure()
+    length = len(trakt_shows)
+    index = 0
+
+    for tvdbid in trakt_shows:
+        index += 1
+        if not daemon:
+            progress.update(int(float(index)/length*100), "Cleaning Shows")
+
+        if tvdbid not in xbmc_shows:
+            _cleanShow(tvdbid, trakt_shows)
+        else:
+            _cleanShowDiff(tvdbid, trakt_shows, xbmc_shows)
+
+    if not daemon:
+        progress.close()
