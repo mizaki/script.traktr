@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+    <!-- Preferences -->
+    <string id="0">Geral</string>
+	<string id="1">Ativar modo de depuração</string>
+    <string id="2">Usuário</string>
+    <string id="3">Senha</string>
+    <string id="4">Usar conexão segura (HTTPS)</string>
+
+    <string id="10">Auto Sincronia</string>
+    <string id="11">Auto sincronizar filmes ao iniciar</string>
+    <string id="12">Auto sincronizar seriados ao iniciar</string>
+    <string id="13">Auto limpar coleção de filmes ao iniciar</string>
+    <string id="14">Auto limpar coleção de seriados ao iniciar</string>
+
+    <string id="20">Avaliação</string>
+    <string id="21">Avaliar filmes após assistir</string>
+    <string id="22">Avaliar episódios de seriados após assistir</string>
+    <string id="23">Avaliar cada item na lista de reprodução</string>
+    <string id="24">Percentual assistido mínimo para exibir o diálogo de avaliação</string>
+
+    <string id="30">Scrobbling</string>
+    <string id="31">Fazer scrobble de filmes</string>
+    <string id="32">Fazer scrobble de episódios de seriados</string>
+    <string id="33">Percentual assistido mínimo para fazer scrobble de um item</string>
+
+
+    <!-- Info -->
+        <!-- Error -->
+    <string id="100">por favor coloque seu Usuário e Senha nas configurações</string>
+    <string id="101">por favor coloque sua Senha nas configurações</string>
+    <string id="102">não foi possível conectar ao trakt</string>
+    <string id="103">Erro</string>
+    <string id="104">Usuário ou senha incorretos</string>
+        <!-- auto sync -->
+    <string id="110">Sincronizando Filmes</string>
+    <string id="111">Sincronizando Seriados</string>
+    <string id="112">Sincronia Completa</string>
+        <!-- recommend -->
+    <string id="120">não existem filmes recomendados para você</string>
+    <string id="121">não existem seriados recomendados para você</string>
+        <!-- watchlist -->
+    <string id="130">Falha ao adicionar à lista de interesses</string>
+    <string id="131">Adicionado com sucesso à lista de interesses</string>
+    <string id="132">Falha ao remover da lista de interesses</string>
+    <string id="133">Removido com sucesso da lista de interesses</string>
+    <string id="134">não existem filmes em sua lista de interesses</string>
+    <string id="135">não existem seriados em sua lista de interesses</string>
+    <string id="136">Adicionar à lista de interesses</string>
+    <string id="137">Remover da lista de interesses</string>
+    <string id="138">Avaliar</string>
+        <!-- rate -->
+    <string id="140">Avaliação removida com sucesso</string>
+    <string id="141">Avaliação submetida com sucesso</string>
+    <string id="142">Avaliar esse filme?</string>
+    <string id="143">Avaliar esse episódio?</string>
+    <string id="144">Avaliar o seriado inteiro</string>
+    <string id="145">Avaliar esse seriado?</string>
+        <!-- info errors -->
+    <string id="150">não encontrado em sua Biblioteca XBMC</string>
+    <string id="151">Incapaz de reproduzir o filme</string>
+    <string id="152">em breve</string>
+        <!-- trending -->
+    <string id="160">não existem filmes em tendência</string>
+    <string id="161">não existem seriados em tendência</string>
+        <!-- sync / clean -->
+    <string id="170">Configurando Contador de Reproduções XBMC</string>
+    <string id="171">Limpando Filmes</string>
+    <string id="172">Gerando Listas de Filmes</string>
+    <string id="173">Atualizando Filmes no Trakt</string>
+    <string id="174">Gerando Lista de Episódios de Seriados</string>
+    <string id="175">Sincronizando Seriados</string>
+    <string id="176">Enviando Dados ao Trakt</string>
+    <string id="177">Limpando Seriados</string>
+
+
+    <!-- Titles -->
+    <string id="200">Traktr</string>
+    <string id="201">Lista de Interesses</string>
+    <string id="202">Recomendações</string>
+    <string id="203">Filmes / Seriados em Tendência</string>
+    <string id="204">Sincronizar / Limpar</string>
+
+
+    <!-- Submenu -->
+    <string id="300">Sincronizar Filmes</string>
+    <string id="301">Sincronizar Seriados</string>
+    <string id="302">Limpar Coleção de Filmes</string>
+    <string id="303">Limpar Coleção de Seriados</string>
+
+    <string id="310">Filmes em Tendência</string>
+    <string id="311">Seriados em Tendência</string>
+
+    <string id="320">Lista de Interesses de Filmes</string>
+    <string id="321">Lista de Interesses de Seriados</string>
+
+    <string id="330">Filmes Recomendados</string>
+    <string id="331">Seriados Recomendados</string>
+</strings>
