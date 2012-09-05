@@ -106,7 +106,6 @@ def getTraktConnection():
             conn = nbconnection.NBConnection('api.trakt.tv')
     except socket.timeout:
         Debug("getTraktConnection: can't connect to trakt - timeout")
-        notification("Trakt Utilities", __language__(1108).encode( "utf-8", "ignore" ) + ": timeout") # can't connect to trakt
         return None
     return conn
 
@@ -156,7 +155,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
     except socket.error:
         Debug("traktQuery: can't connect to trakt")
         if not silent:
-            notification("Trakt Utilities", __language__(1108).encode( "utf-8", "ignore" )) # can't connect to trakt
+            Debug(__language__(1108).encode( "utf-8", "ignore" )) # can't connect to trakt
         if returnStatus:
             data = {}
             data['status'] = 'failure'
@@ -194,7 +193,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             data['error'] = 'Bad responce from trakt'
             return data
         if not silent:
-            notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
+            Debug("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
         return None
 
     if 'status' in data:
@@ -203,7 +202,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             if returnStatus:
                 return data
             if not silent:
-                notification("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
+                Debug("Trakt Utilities", __language__(1109).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
             return None
 
     return data
