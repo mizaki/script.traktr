@@ -25,7 +25,7 @@ def showWatchlistMovies():
         return # error already displayed in utilities.py
 
     if len(movies) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1160).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies in your watchlist
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(134).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies in your watchlist
         return
 
     # display watchlist movie list
@@ -43,7 +43,7 @@ def showWatchlistTVShows():
         return # error already displayed in utilities.py
 
     if len(tvshows) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1161).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows in your watchlist
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(135).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows in your watchlist
         return
 
     # display watchlist tv shows

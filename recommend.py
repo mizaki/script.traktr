@@ -25,7 +25,7 @@ def showRecommendedMovies():
         return # error already displayed in utilities.py
 
     if len(movies) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1158).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies recommended for you
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(120).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies recommended for you
         return
 
     for movie in movies:
@@ -49,7 +49,7 @@ def showRecommendedTVShows():
         return # error already displayed in utilities.py
 
     if len(tvshows) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1159).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows recommended for you
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(121).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows recommended for you
         return
 
     for tvshow in tvshows:

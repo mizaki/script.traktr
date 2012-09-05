@@ -198,16 +198,16 @@ class MoviesWindow(xbmcgui.WindowXML):
             utilities.playMovieById(movie['idMovie'])
         elif actions[select] == 'unwatchlist':
             if utilities.removeMoviesFromWatchlist([movie]) == None:
-                utilities.notification("Trakt Utilities", __language__(1311).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
+                utilities.notification("Trakt Utilities", __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(1312).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
+                utilities.notification("Trakt Utilities", __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
                 li.setProperty('Watchlist','false')
                 movie['watchlist'] = False
         elif actions[select] == 'watchlist':
             if utilities.addMoviesToWatchlist([movie]) == None:
-                utilities.notification("Trakt Utilities", __language__(1309).encode( "utf-8", "ignore" )) # Failed to added to watch-list
+                utilities.notification("Trakt Utilities", __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(1310).encode( "utf-8", "ignore" )) # Successfully added to watch-list
+                utilities.notification("Trakt Utilities", __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
                 li.setProperty('Watchlist','true')
                 movie['watchlist'] = True
         elif actions[select] == 'rate':
@@ -224,7 +224,7 @@ class MoviesWindow(xbmcgui.WindowXML):
         elif action.getId() == ACTION_SELECT_ITEM:
             movie = self.movies[self.getControl(MOVIE_LIST).getSelectedPosition()]
             if movie['idMovie'] == -1: # Error
-                xbmcgui.Dialog().ok("Trakt Utilities", movie['title'].encode( "utf-8", "ignore" ) + " " + __language__(1162).encode( "utf-8", "ignore" )) # "moviename" not found in your XBMC Library
+                xbmcgui.Dialog().ok("Trakt Utilities", movie['title'].encode( "utf-8", "ignore" ) + " " + __language__(150).encode( "utf-8", "ignore" )) # "moviename" not found in your XBMC Library
             else:
                 utilities.playMovieById(movie['idMovie'])
         elif action.getId() == ACTION_CONTEXT_MENU:
@@ -432,16 +432,16 @@ class TVShowsWindow(xbmcgui.WindowXML):
             xbmcgui.Dialog().ok("Trakt Utilities", "comming soon")
         elif actions[select] == 'unwatchlist':
             if utilities.removeTVShowsFromWatchlist([show]) == None:
-                utilities.notification("Trakt Utilities", __language__(1311).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
+                utilities.notification("Trakt Utilities", __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(1312).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
+                utilities.notification("Trakt Utilities", __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
                 li.setProperty('Watchlist','false')
                 show['watchlist'] = False
         elif actions[select] == 'watchlist':
             if utilities.addTVShowsToWatchlist([show]) == None:
-                utilities.notification("Trakt Utilities", __language__(1309).encode( "utf-8", "ignore" )) # Failed to added to watch-list
+                utilities.notification("Trakt Utilities", __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(1310).encode( "utf-8", "ignore" )) # Successfully added to watch-list
+                utilities.notification("Trakt Utilities", __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
                 li.setProperty('Watchlist','true')
                 show['watchlist'] = True
         elif actions[select] == 'rate':
@@ -477,7 +477,7 @@ class RateMovieDialog(xbmcgui.WindowXMLDialog):
             self.curRating = None
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(1303).encode( "utf-8", "ignore" )) # How would you rate that movie?
+        self.getControl(RATE_TITLE).setLabel(__language__(142).encode( "utf-8", "ignore" )) # How would you rate that movie?
         self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
         self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)
         self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
@@ -612,8 +612,8 @@ class RateEpisodeDialog(xbmcgui.WindowXMLDialog):
             self.curRating = None
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(1304).encode( "utf-8", "ignore" )) # How would you rate that episode?
-        self.getControl(RATE_RATE_SHOW_BTN).setLabel(__language__(1305).encode( "utf-8", "ignore" )) # Rate whole show
+        self.getControl(RATE_TITLE).setLabel(__language__(143).encode( "utf-8", "ignore" )) # How would you rate that episode?
+        self.getControl(RATE_RATE_SHOW_BTN).setLabel(__language__(144).encode( "utf-8", "ignore" )) # Rate whole show
         self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
         self.setFocus(self.getControl(RATE_SKIP_RATING))
         self.updateRatedButton()
@@ -756,7 +756,7 @@ class RateShowDialog(xbmcgui.WindowXMLDialog):
             self.curRating = None
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(1306).encode( "utf-8", "ignore" )) # How would you rate that show?
+        self.getControl(RATE_TITLE).setLabel(__language__(145).encode( "utf-8", "ignore" )) # How would you rate that show?
         self.getControl(RATE_SCENE).setVisible(False)
         self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
         self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)

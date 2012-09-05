@@ -33,8 +33,8 @@ def autostart():
         autosync_cleantvshowcollection = __settings__.getSetting("autosync_cleantv")
         try:
             if autosync_movies == "true":
-                Debug("autostart sync seen movies")
-                utilities.notification("Trakt Utilities", "Syncing Movies") # start sync movies
+                Debug("autostart sync movies")
+                utilities.notification("Trakt Utilities", __language__(110).encode("utf-8", "ignore")) # start sync movies
 
                 su.syncMovies(daemon=True)
 
@@ -45,7 +45,7 @@ def autostart():
                 raise SystemExit()
 
             if autosync_tv == "true":
-                utilities.notification("Trakt Utilities", "Syncing TV") # start tvshow collection update
+                utilities.notification("Trakt Utilities", __language__(111).encode("utf-8", "ignore")) # start tvshow collection update
 
                 su.syncTV(True)
                 if autosync_cleantvshowcollection:
@@ -54,7 +54,7 @@ def autostart():
                 raise SystemExit()
 
             if autosync_tv == "true" or autosync_movies == "true":
-                utilities.notification("Trakt Utilities", "Sync Complete") # update / sync done
+                utilities.notification("Trakt Utilities", __language__(112).encode("utf-8", "ignore")) # update / sync done
         except SystemExit:
             notificationThread.abortRequested = True
             Debug("[Service] Auto sync processes aborted due to shutdown request")
