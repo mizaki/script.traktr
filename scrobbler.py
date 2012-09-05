@@ -14,12 +14,12 @@ import rating
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 # read settings
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
 
 class Scrobbler(threading.Thread):
@@ -158,7 +158,7 @@ class Scrobbler(threading.Thread):
                 Debug("[Scrobbler] Scrobble responce: "+str(responce))
 
     def check(self):
-        __settings__ = xbmcaddon.Addon( "script.traktutilities" )
+        __settings__ = xbmcaddon.Addon( "script.traktr" )
         scrobbleMinViewTimeOption = __settings__.getSetting("scrobble_min_view_time")
 
         if (self.watchedTime/self.totalTime)*100 >= float(scrobbleMinViewTimeOption):

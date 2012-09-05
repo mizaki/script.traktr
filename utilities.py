@@ -26,12 +26,12 @@ except ImportError:
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 # read settings
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
 
 apikey = '48dfcb4813134da82152984e8c4f329bc8b8b46a'
@@ -43,9 +43,9 @@ debug = __settings__.getSetting( "debug" )
 def Debug(msg, force=False):
     if (debug == 'true' or force):
         try:
-            print "Trakt Utilities: " + msg
+            print "Traktr: " + msg
         except UnicodeEncodeError:
-            print "Trakt Utilities: " + msg.encode( "utf-8", "ignore" )
+            print "Traktr: " + msg.encode( "utf-8", "ignore" )
 
 
 import raw_xbmc_database
@@ -193,7 +193,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             data['error'] = 'Bad responce from trakt'
             return data
         if not silent:
-            Debug("Trakt Utilities", __language__(103).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
+            Debug("Traktr", __language__(103).encode( "utf-8", "ignore" ) + ": Bad responce from trakt") # Error
         return None
 
     if 'status' in data:
@@ -202,7 +202,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             if returnStatus:
                 return data
             if not silent:
-                Debug("Trakt Utilities", __language__(103).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
+                Debug("Traktr", __language__(103).encode( "utf-8", "ignore" ) + ": " + str(data['error'])) # Error
             return None
 
     return data

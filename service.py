@@ -12,11 +12,11 @@ import sync_update as su
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
 
 Debug("service: " + __settings__.getAddonInfo("id") + " - version: " + __settings__.getAddonInfo("version"))
@@ -47,7 +47,7 @@ def autostart():
             if autosync_tv == "true":
                 utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(111).encode("utf-8", "ignore")) # start tvshow collection update
 
-                su.syncTV(True)
+                su.syncTV(daemon=True)
                 if autosync_cleantvshowcollection:
                     su.cleanTV(daemon=True)
             if xbmc.abortRequested:
