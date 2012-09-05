@@ -24,7 +24,7 @@ def showTrendingMovies():
         return # error already displayed in utilities.py
 
     if len(movies) == 0:
-        xbmcgui.Dialog().ok("Trakt Utilities", "there are no trending movies")
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(160).encode( "utf-8", "ignore" ))
         return
 
     for movie in movies:
@@ -49,7 +49,7 @@ def showTrendingTVShows():
         return # error already displayed in utilities.py
 
     if len(tvshows) == 0:
-        xbmcgui.Dialog().ok("Trakt Utilities", "there are no trending tv shows")
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(161).encode( "utf-8", "ignore" ))
         return
 
     for tvshow in tvshows:

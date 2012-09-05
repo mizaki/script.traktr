@@ -72,25 +72,25 @@ def notification(header, message, time=5000, icon=__settings__.getAddonInfo("ico
 def checkSettings(daemon=False):
     if username == "":
         if daemon:
-            notification("Trakt Utilities", __language__(100).encode( "utf-8", "ignore" )) # please enter your Username and Password in settings
+            notification(__language__(200).encode( "utf-8", "ignore" ), __language__(100).encode( "utf-8", "ignore" )) # please enter your Username and Password in settings
         else:
-            xbmcgui.Dialog().ok("Trakt Utilities", __language__(100).encode( "utf-8", "ignore" )) # please enter your Username and Password in settings
+            xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(100).encode( "utf-8", "ignore" )) # please enter your Username and Password in settings
             __settings__.openSettings()
         return False
     elif __settings__.getSetting("password") == "":
         if daemon:
-            notification("Trakt Utilities", __language__(101).encode( "utf-8", "ignore" )) # please enter your Password in settings
+            notification(__language__(200).encode( "utf-8", "ignore" ), __language__(101).encode( "utf-8", "ignore" )) # please enter your Password in settings
         else:
-            xbmcgui.Dialog().ok("Trakt Utilities", __language__(101).encode( "utf-8", "ignore" )) # please enter your Password in settings
+            xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(101).encode( "utf-8", "ignore" )) # please enter your Password in settings
             __settings__.openSettings()
         return False
 
     data = traktJsonRequest('POST', '/account/test/%%API_KEY%%', silent=True)
     if data == None: #Incorrect trakt login details
         if daemon:
-            notification("Trakt Utilities", __language__(104).encode( "utf-8", "ignore" )) # please enter your Password in settings
+            notification(__language__(200).encode( "utf-8", "ignore" ), __language__(104).encode( "utf-8", "ignore" )) # please enter your Password in settings
         else:
-            xbmcgui.Dialog().ok("Trakt Utilities", __language__(104).encode( "utf-8", "ignore" )) # please enter your Password in settings
+            xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(104).encode( "utf-8", "ignore" )) # please enter your Password in settings
             __settings__.openSettings()
         return False
 
@@ -601,9 +601,9 @@ def rateMovieOnTrakt(imdbid, title, year, rating):
         Debug("Error in request from 'rateMovieOnTrakt()'")
 
     if (rating == "unrate"):
-        notification("Trakt Utilities", __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
-        notification("Trakt Utilities", __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
 
     return data
 
@@ -637,9 +637,9 @@ def rateEpisodeOnTrakt(tvdbid, title, year, season, episode, rating):
         Debug("Error in request from 'rateEpisodeOnTrakt()'")
 
     if (rating == "unrate"):
-        notification("Trakt Utilities", __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
-        notification("Trakt Utilities", __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
 
     return data
 
@@ -673,9 +673,9 @@ def rateShowOnTrakt(tvdbid, title, year, rating):
         Debug("Error in request from 'rateShowOnTrakt()'")
 
     if (rating == "unrate"):
-        notification("Trakt Utilities", __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(140).encode( "utf-8", "ignore" )) # Rating removed successfully
     else :
-        notification("Trakt Utilities", __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
+        notification(__language__(200).encode( "utf-8", "ignore" ), __language__(141).encode( "utf-8", "ignore" )) # Rating submitted successfully
 
     return data
 
@@ -742,7 +742,7 @@ def playMovieById(idMovie):
             if result['result'] == "OK":
                 if xbmc.Player().isPlayingVideo():
                     return True
-            notification("Trakt Utilities", __language__(151).encode( "utf-8", "ignore" )) # Unable to play movie
+            notification(__language__(200).encode( "utf-8", "ignore" ), __language__(151).encode( "utf-8", "ignore" )) # Unable to play movie
         except KeyError:
             Debug("playMovieById, VideoPlaylist.Play: KeyError")
             return None

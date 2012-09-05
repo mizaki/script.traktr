@@ -24,7 +24,7 @@ def _updateXBMCMoviePlaycounts(playcount_list, progress, daemon):
     index = 0
 
     if not daemon:
-        progress.update(0, "Setting XBMC Playcounts")
+        progress.update(0, __language__(170).encode( "utf-8", "ignore" ))
 
     for movieid, playcount, imdbid in playcount_list:
         utilities.setXBMCMoviePlaycount(movieid, playcount, imdbid)
@@ -33,7 +33,7 @@ def _updateXBMCMoviePlaycounts(playcount_list, progress, daemon):
         if not daemon:
             if progress.iscanceled():
                 return
-            progress.update(int(float(index)/count*100), "Setting XBMC Playcounts")
+            progress.update(int(float(index)/count*100), __language__(170).encode( "utf-8", "ignore" ))
 
 
 def cleanMovies(daemon=False):
@@ -44,7 +44,7 @@ def cleanMovies(daemon=False):
     """
     if not daemon:
         progress = xbmcgui.DialogProgress()
-        progress.create("Trakt Utilities", "Cleaning Movies")
+        progress.create(__language__(200).encode( "utf-8", "ignore" ), __language__(171).encode( "utf-8", "ignore" ))
 
     trakt_movies = utilities.traktMovieListByImdbID(utilities.getMoviesFromTrakt())
     xbmc_movies = utilities.xbmcMovieListByImdbID(utilities.getMoviesFromXBMC())
@@ -56,7 +56,7 @@ def cleanMovies(daemon=False):
     for imdbid in trakt_movies:
         if not daemon:
             index += 1
-            progress.update(int(float(index)/length*100), "Cleaning Movies")
+            progress.update(int(float(index)/length*100), __language__(171).encode( "utf-8", "ignore" ))
 
         if imdbid not in xbmc_movies:
             clean_list.append({'imdb_id': imdbid, 'title': trakt_movies[imdbid]['title'], 'year': trakt_movies[imdbid]['year']})
@@ -77,7 +77,7 @@ def syncMovies(daemon=False):
     """
     if not daemon:
         progress = xbmcgui.DialogProgress()
-        progress.create("Trakt Utilities", "Generating Movie Lists") # Checking XBMC Database for new seen Movies
+        progress.create(__language__(200).encode( "utf-8", "ignore" ), __language__(172).encode( "utf-8", "ignore" )) # Checking XBMC Database for new seen Movies
 
     # Generate list of movies keyed with their imdb id
     trakt_movies = utilities.traktMovieListByImdbID(utilities.getMoviesFromTrakt())
@@ -102,7 +102,7 @@ def syncMovies(daemon=False):
             xbmc_playcount_update.append((xbmc_movies[imdbid]['movieid'], trakt_movies[imdbid]['plays'], imdbid))
 
     if not daemon:
-        progress.update(0, "Updating Movies On Trakt")
+        progress.update(0, __language__(173).encode( "utf-8", "ignore" ))
 
     if len(trakt_collection_update) > 0:
         utilities.traktJsonRequest('POST', '/movie/library/%%API_KEY%%', {'movies': trakt_collection_update})
@@ -292,7 +292,7 @@ def syncTV(daemon=False):
 
     if not daemon:
         progress = xbmcgui.DialogProgress()
-        progress.create("Trakt Utilities", "Generating TV Episode Lists")
+        progress.create(__language__(200).encode( "utf-8", "ignore" ), __language__(174).encode( "utf-8", "ignore" ))
 
     xbmc_shows = _parseXBMCStructure()
     trakt_shows = _parseTraktStructure()
@@ -304,7 +304,7 @@ def syncTV(daemon=False):
         if not daemon:
             if progress.iscanceled():
                 return
-            progress.update(int(float(index)/length*100), "Syncing Shows")
+            progress.update(int(float(index)/length*100), __language__(175).encode( "utf-8", "ignore" ))
 
         index += 1
 
@@ -320,7 +320,7 @@ def syncTV(daemon=False):
             watch_episodes.append(watch_trakt_episodes)
 
     if not daemon:
-        progress.update(0, "Sending Data To Trakt")
+        progress.update(0, __language__(176).encode( "utf-8", "ignore" ))
 
     _sendEpisodesToTrakt(collect_episodes, watch_episodes)
 
@@ -351,7 +351,7 @@ def cleanTV(daemon=False):
     """Remove any shows and episodes on trakt that aren't in the XBMC library"""
     if not daemon:
         progress = xbmcgui.DialogProgress()
-        progress.create("Trakt Utilities", "Generating TV Episode Lists")
+        progress.create(__language__(200).encode( "utf-8", "ignore" ), __language__(174).encode( "utf-8", "ignore" ))
 
     xbmc_shows = _parseXBMCStructure()
     trakt_shows = _parseTraktStructure()
@@ -361,7 +361,7 @@ def cleanTV(daemon=False):
     for tvdbid in trakt_shows:
         if not daemon:
             index += 1
-            progress.update(int(float(index)/length*100), "Cleaning Shows")
+            progress.update(int(float(index)/length*100), __language__(177).encode( "utf-8", "ignore" ))
 
         if tvdbid not in xbmc_shows:
             _cleanShow(tvdbid, trakt_shows)

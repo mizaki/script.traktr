@@ -177,15 +177,15 @@ class MoviesWindow(xbmcgui.WindowXML):
         if self.type != 'watchlist':
             if 'watchlist' in movie:
                 if movie['watchlist']:
-                    options.append("Remove from watchlist")
+                    options.append(__language__(137).encode( "utf-8", "ignore" ))
                     actions.append('unwatchlist')
                 else:
-                    options.append("Add to watchlist")
+                    options.append(__language__(136).encode( "utf-8", "ignore" ))
                     actions.append('watchlist')
         else:
-            options.append("Remove from watchlist")
+            options.append(__language__(137).encode( "utf-8", "ignore" ))
             actions.append('unwatchlist')
-        options.append("Rate")
+        options.append(__language__(138).encode( "utf-8", "ignore" ))
         actions.append('rate')
 
         select = xbmcgui.Dialog().select(movie['title']+" - "+str(movie['year']), options)
@@ -198,16 +198,16 @@ class MoviesWindow(xbmcgui.WindowXML):
             utilities.playMovieById(movie['idMovie'])
         elif actions[select] == 'unwatchlist':
             if utilities.removeMoviesFromWatchlist([movie]) == None:
-                utilities.notification("Trakt Utilities", __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
                 li.setProperty('Watchlist','false')
                 movie['watchlist'] = False
         elif actions[select] == 'watchlist':
             if utilities.addMoviesToWatchlist([movie]) == None:
-                utilities.notification("Trakt Utilities", __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
                 li.setProperty('Watchlist','true')
                 movie['watchlist'] = True
         elif actions[select] == 'rate':
@@ -224,7 +224,7 @@ class MoviesWindow(xbmcgui.WindowXML):
         elif action.getId() == ACTION_SELECT_ITEM:
             movie = self.movies[self.getControl(MOVIE_LIST).getSelectedPosition()]
             if movie['idMovie'] == -1: # Error
-                xbmcgui.Dialog().ok("Trakt Utilities", movie['title'].encode( "utf-8", "ignore" ) + " " + __language__(150).encode( "utf-8", "ignore" )) # "moviename" not found in your XBMC Library
+                xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), movie['title'].encode( "utf-8", "ignore" ) + " " + __language__(150).encode( "utf-8", "ignore" )) # "moviename" not found in your XBMC Library
             else:
                 utilities.playMovieById(movie['idMovie'])
         elif action.getId() == ACTION_CONTEXT_MENU:
@@ -408,18 +408,18 @@ class TVShowsWindow(xbmcgui.WindowXML):
         if self.type != 'watchlist':
             if 'watchlist' in show:
                 if show['watchlist']:
-                    options.append("Remove from watchlist")
+                    options.append(__language__(137).encode( "utf-8", "ignore" ))
                     actions.append('unwatchlist')
                 else:
-                    options.append("Add to watchlist")
+                    options.append(__language__(136).encode( "utf-8", "ignore" ))
                     actions.append('watchlist')
             else:
-                options.append("Add to watchlist")
+                options.append(__language__(136).encode( "utf-8", "ignore" ))
                 actions.append('watchlist')
         else:
-            options.append("Remove from watchlist")
+            options.append(__language__(137).encode( "utf-8", "ignore" ))
             actions.append('unwatchlist')
-        options.append("Rate")
+        options.append(__language__(138).encode( "utf-8", "ignore" ))
         actions.append('rate')
 
         select = xbmcgui.Dialog().select(show['title'], options)
@@ -429,19 +429,19 @@ class TVShowsWindow(xbmcgui.WindowXML):
             Debug ("menu quit by user")
             return
         elif actions[select] == 'play':
-            xbmcgui.Dialog().ok("Trakt Utilities", "comming soon")
+            xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(152).encode( "utf-8", "ignore" ))
         elif actions[select] == 'unwatchlist':
             if utilities.removeTVShowsFromWatchlist([show]) == None:
-                utilities.notification("Trakt Utilities", __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(132).encode( "utf-8", "ignore" )) # Failed to remove from watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(133).encode( "utf-8", "ignore" )) # Successfully removed from watch-list
                 li.setProperty('Watchlist','false')
                 show['watchlist'] = False
         elif actions[select] == 'watchlist':
             if utilities.addTVShowsToWatchlist([show]) == None:
-                utilities.notification("Trakt Utilities", __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(130).encode( "utf-8", "ignore" )) # Failed to added to watch-list
             else:
-                utilities.notification("Trakt Utilities", __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
+                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(131).encode( "utf-8", "ignore" )) # Successfully added to watch-list
                 li.setProperty('Watchlist','true')
                 show['watchlist'] = True
         elif actions[select] == 'rate':

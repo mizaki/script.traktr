@@ -20,8 +20,6 @@ __status__ = "Production"
 __settings__ = xbmcaddon.Addon( "script.traktutilities" )
 __language__ = __settings__.getLocalizedString
 
-Debug("default: " + __settings__.getAddonInfo("id") + " - version: " + __settings__.getAddonInfo("version"))
-
 # Usermenu:
 def menu():
     # check if needed settings are set
@@ -31,7 +29,7 @@ def menu():
     options = [__language__(201).encode( "utf-8", "ignore" ), __language__(202).encode( "utf-8", "ignore" ), __language__(203).encode( "utf-8", "ignore" ), __language__(204).encode( "utf-8", "ignore" )]
 
     while True:
-        select = xbmcgui.Dialog().select("Trakt Utilities", options)
+        select = xbmcgui.Dialog().select(__language__(200).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
@@ -51,7 +49,7 @@ def submenuUpdateSyncClean():
     options = [__language__(300).encode( "utf-8", "ignore" ), __language__(301).encode( "utf-8", "ignore" ), __language__(302).encode( "utf-8", "ignore" ), __language__(303).encode( "utf-8", "ignore" )]
 
     while True:
-        select = xbmcgui.Dialog().select("Trakt Utilities", options)
+        select = xbmcgui.Dialog().select(__language__(200).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
@@ -63,7 +61,7 @@ def submenuUpdateSyncClean():
         elif select == 2: # Clean Movie Collection
             su.cleanMovies()
         elif select == 3: # Clean TV Show Collection
-            su.cleanTVShowCollection()
+            su.cleanTV()
 
 def submenuTrendingMoviesTVShows():
     options = [__language__(310).encode( "utf-8", "ignore" ), __language__(311).encode( "utf-8", "ignore" )]

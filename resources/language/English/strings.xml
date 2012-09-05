@@ -46,6 +46,9 @@
     <string id="133">Successfully removed from watch-list</string>
     <string id="134">there are no movies in your watchlist</string>
     <string id="135">there are no tv shows in your watchlist</string>
+    <string id="136">Add to watchlist</string>
+    <string id="137">Remove from watchlist</string>
+    <string id="138">Rate</string>
         <!-- rate -->
     <string id="140">Rating removed successfully</string>
     <string id="141">Rating submitted successfully</string>
@@ -53,9 +56,22 @@
     <string id="143">Rate that episode?</string>
     <string id="144">Rate whole show</string>
     <string id="145">Rate that show?</string>
-        <!-- other -->
+        <!-- info errors -->
     <string id="150">not found in your XBMC Library</string>
     <string id="151">Unable to play movie</string>
+    <string id="152">coming soon</string>
+        <!-- trending -->
+    <string id="160">there are no trending movies</string>
+    <string id="161">there are no trending tv shows</string>
+        <!-- sync / clean -->
+    <string id="170">Setting XBMC Playcounts</string>
+    <string id="171">Cleaning Movies</string>
+    <string id="172">Generating Movie Lists</string>
+    <string id="173">Updating Movies On Trakt</string>
+    <string id="174">Generating TV Episode Lists</string>
+    <string id="175">Syncing Shows</string>
+    <string id="176">Sending Data To Trakt</string>
+    <string id="177">Cleaning Shows</string>
 
 
     <!-- Titles -->
