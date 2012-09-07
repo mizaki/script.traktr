@@ -1,39 +1,35 @@
 # -*- coding: utf-8 -*-
-# 
+#
 
-import os
-import xbmcgui,xbmcaddon,xbmc
-from utilities import *
-from sync_update import *
-from watchlist import *
-from recommend import *
-from friends import *
-from trending import *
+import xbmcgui
+import xbmcaddon
+from utilities import Debug, checkSettings
+import sync_update as su
+import trending
+import watchlist
+import recommend
 
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 #read settings
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
-
-Debug("default: " + __settings__.getAddonInfo("id") + " - version: " + __settings__.getAddonInfo("version"))
 
 # Usermenu:
 def menu():
-
     # check if needed settings are set
     if checkSettings() == False:
         return
 
-    options = [__language__(1210).encode( "utf-8", "ignore" ), __language__(1211).encode( "utf-8", "ignore" ), __language__(1212).encode( "utf-8", "ignore" ), __language__(1213).encode( "utf-8", "ignore" ), __language__(1214).encode( "utf-8", "ignore" )]
-    
+    options = [__language__(201).encode( "utf-8", "ignore" ), __language__(202).encode( "utf-8", "ignore" ), __language__(203).encode( "utf-8", "ignore" ), __language__(204).encode( "utf-8", "ignore" )]
+
     while True:
-        select = xbmcgui.Dialog().select("Trakt Utilities", options)
+        select = xbmcgui.Dialog().select(__language__(200).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
@@ -41,82 +37,72 @@ def menu():
         else:
             if select == 0: # Watchlist
                 submenuWatchlist()
-            elif select == 1: # Friends
-                showFriends()
-            elif select == 2: # Recommendations
+            elif select == 1: # Recommendations
                 submenuRecommendations()
-            elif select == 3: # Trending Movies / TV Shows
+            elif select == 2: # Trending Movies / TV Shows
                 submenuTrendingMoviesTVShows()
-            elif select == 4: # Update / Sync / Clean
+            elif select == 3: # Update / Sync / Clean
                 submenuUpdateSyncClean()
 
 
 def submenuUpdateSyncClean():
+    options = [__language__(300).encode( "utf-8", "ignore" ), __language__(301).encode( "utf-8", "ignore" ), __language__(302).encode( "utf-8", "ignore" ), __language__(303).encode( "utf-8", "ignore" )]
 
-    options = [__language__(1217).encode( "utf-8", "ignore" ), __language__(1218).encode( "utf-8", "ignore" ), __language__(1219).encode( "utf-8", "ignore" ), __language__(1220).encode( "utf-8", "ignore" ), __language__(1221).encode( "utf-8", "ignore" ), __language__(1222).encode( "utf-8", "ignore" )]
-    
     while True:
-        select = xbmcgui.Dialog().select("Trakt Utilities", options)
+        select = xbmcgui.Dialog().select(__language__(200).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
             return
-        elif select == 0: # Update Movie Collection
-            updateMovieCollection()
-        elif select == 1: # Sync seen Movies
-            syncSeenMovies()
-        elif select == 2: # Update TV Show Collection
-            updateTVShowCollection()
-        elif select == 3: # Sync seen TV Shows
-            syncSeenTVShows()
-        elif select == 4: # Clean Movie Collection
-            cleanMovieCollection()
-        elif select == 5: # Clean TV Show Collection
-            cleanTVShowCollection()
+        elif select == 0: # Sync Movies
+            su.syncMovies()
+        elif select == 1: # Sync TV Shows
+            su.syncTV()
+        elif select == 2: # Clean Movie Collection
+            su.cleanMovies()
+        elif select == 3: # Clean TV Show Collection
+            su.cleanTV()
 
 def submenuTrendingMoviesTVShows():
+    options = [__language__(310).encode( "utf-8", "ignore" ), __language__(311).encode( "utf-8", "ignore" )]
 
-    options = [__language__(1250).encode( "utf-8", "ignore" ), __language__(1251).encode( "utf-8", "ignore" )]
-    
     while True:
-        select = xbmcgui.Dialog().select(__language__(1213).encode( "utf-8", "ignore" ), options)
+        select = xbmcgui.Dialog().select(__language__(203).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
             return
         if select == 0: # Trending Movies
-            showTrendingMovies()
+            trending.showTrendingMovies()
         elif select == 1: # Trending TV Shows
-            showTrendingTVShows()
+            trending.showTrendingTVShows()
 
 def submenuWatchlist():
+    options = [__language__(320).encode( "utf-8", "ignore" ), __language__(321).encode( "utf-8", "ignore" )]
 
-    options = [__language__(1252).encode( "utf-8", "ignore" ), __language__(1253).encode( "utf-8", "ignore" )]
-    
     while True:
-        select = xbmcgui.Dialog().select(__language__(1210).encode( "utf-8", "ignore" ), options)
+        select = xbmcgui.Dialog().select(__language__(201).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
             return
         if select == 0: # Watchlist Movies
-            showWatchlistMovies()
+            watchlist.showWatchlistMovies()
         elif select == 1: # Watchlist TV Shows
-            showWatchlistTVShows()
+            watchlist.showWatchlistTVShows()
 
 def submenuRecommendations():
-    
-    options = [__language__(1255).encode( "utf-8", "ignore" ), __language__(1256).encode( "utf-8", "ignore" )]
-    
+    options = [__language__(330).encode( "utf-8", "ignore" ), __language__(331).encode( "utf-8", "ignore" )]
+
     while True:
-        select = xbmcgui.Dialog().select(__language__(1212).encode( "utf-8", "ignore" ), options)
+        select = xbmcgui.Dialog().select(__language__(202).encode( "utf-8", "ignore" ), options)
         Debug("Select: " + str(select))
         if select == -1:
             Debug ("menu quit by user")
             return
         if select == 0: # Watchlist Movies
-            showRecommendedMovies()
+            recommend.showRecommendedMovies()
         elif select == 1: # Watchlist TV Shows
-            showRecommendedTVShows()
+            recommend.showRecommendedTVShows()
 
 menu()

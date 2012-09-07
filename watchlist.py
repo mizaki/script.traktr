@@ -1,83 +1,54 @@
 # -*- coding: utf-8 -*-
-# 
+#
 
-import os
-import xbmc,xbmcaddon,xbmcgui
-import time, socket
+import xbmcaddon
+import xbmcgui
 
-try: import simplejson as json
-except ImportError: import json
-
-from utilities import *
-
-try:
-    # Python 3.0 +
-    import http.client as httplib
-except ImportError:
-    # Python 2.7 and earlier
-    import httplib
-
-try:
-  # Python 2.6 +
-  from hashlib import sha as sha
-except ImportError:
-  # Python 2.5 and earlier
-  import sha
+import utilities
 
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uj"
 __status__ = "Production"
 
 # read settings
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
-
-apikey = '48dfcb4813134da82152984e8c4f329bc8b8b46a'
-username = __settings__.getSetting("username")
-pwd = sha.new(__settings__.getSetting("password")).hexdigest()
-debug = __settings__.getSetting( "debug" )
-
-conn = httplib.HTTPConnection('api.trakt.tv')
-headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 
 # list watchlist movies
 def showWatchlistMovies():
-    
-    movies = getWatchlistMoviesFromTrakt()
-    
+    movies = utilities.getWatchlistMoviesFromTrakt()
+
     if movies == None: # movies = None => there was an error
         return # error already displayed in utilities.py
-    
+
     if len(movies) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1160).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies in your watchlist
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(134).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no movies in your watchlist
         return
-        
+
     # display watchlist movie list
     import windows
-    ui = windows.MoviesWindow("movies.xml", __settings__.getAddonInfo('path'), "Default")
-    ui.initWindow(movies, 'watchlist')
-    ui.doModal()
-    del ui
+    gui = windows.MoviesWindow("movies.xml", __settings__.getAddonInfo('path'), "Default")
+    gui.initWindow(movies, 'watchlist')
+    gui.doModal()
+    del gui
 
 # list watchlist tv shows
 def showWatchlistTVShows():
+    tvshows = utilities.getWatchlistTVShowsFromTrakt()
 
-    tvshows = getWatchlistTVShowsFromTrakt()
-    
     if tvshows == None: # tvshows = None => there was an error
         return # error already displayed in utilities.py
-    
+
     if len(tvshows) == 0:
-        xbmcgui.Dialog().ok(__language__(1201).encode( "utf-8", "ignore" ), __language__(1161).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows in your watchlist
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(135).encode( "utf-8", "ignore" )) # Trakt Utilities, there are no tv shows in your watchlist
         return
-    
+
     # display watchlist tv shows
     import windows
-    ui = windows.TVShowsWindow("tvshows.xml", __settings__.getAddonInfo('path'), "Default")
-    ui.initWindow(tvshows, 'watchlist')
-    ui.doModal()
-    del ui
-    
+    gui = windows.TVShowsWindow("tvshows.xml", __settings__.getAddonInfo('path'), "Default")
+    gui.initWindow(tvshows, 'watchlist')
+    gui.doModal()
+    del gui

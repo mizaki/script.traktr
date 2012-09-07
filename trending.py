@@ -1,94 +1,67 @@
 # -*- coding: utf-8 -*-
-# 
+#
 
-import os
-import xbmc,xbmcaddon,xbmcgui
-import time, socket
-
-try: import simplejson as json
-except ImportError: import json
-
-from utilities import *
-
-try:
-    # Python 3.0 +
-    import http.client as httplib
-except ImportError:
-    # Python 2.7 and earlier
-    import httplib
-
-try:
-  # Python 2.6 +
-  from hashlib import sha as sha
-except ImportError:
-  # Python 2.5 and earlier
-  import sha
+import xbmcaddon
+import xbmcgui
+import utilities
 
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 # read settings
-__settings__ = xbmcaddon.Addon( "script.traktutilities" )
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 __language__ = __settings__.getLocalizedString
 
-apikey = '48dfcb4813134da82152984e8c4f329bc8b8b46a'
-username = __settings__.getSetting("username")
-pwd = sha.new(__settings__.getSetting("password")).hexdigest()
-debug = __settings__.getSetting( "debug" )
-
-conn = httplib.HTTPConnection('api.trakt.tv')
-headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 
 def showTrendingMovies():
-    
-    movies = getTrendingMoviesFromTrakt()
-    watchlist = traktMovieListByImdbID(getWatchlistMoviesFromTrakt())
-    
+    movies = utilities.getTrendingMoviesFromTrakt()
+    watchlist = utilities.traktMovieListByImdbID(utilities.getWatchlistMoviesFromTrakt())
+
     if movies == None: # movies = None => there was an error
         return # error already displayed in utilities.py
-    
+
     if len(movies) == 0:
-        xbmcgui.Dialog().ok("Trakt Utilities", "there are no trending movies")
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(160).encode( "utf-8", "ignore" ))
         return
-    
+
     for movie in movies:
         if movie['imdb_id'] in watchlist:
             movie['watchlist'] = True
         else:
             movie['watchlist'] = False
-    
+
     # display trending movie list
     import windows
-    ui = windows.MoviesWindow("movies.xml", __settings__.getAddonInfo('path'), "Default")
-    ui.initWindow(movies, 'trending')
-    ui.doModal()
-    del ui
+    gui = windows.MoviesWindow("movies.xml", __settings__.getAddonInfo('path'), "Default")
+    gui.initWindow(movies, 'trending')
+    gui.doModal()
+    del gui
 
 def showTrendingTVShows():
 
-    tvshows = getTrendingTVShowsFromTrakt()
-    watchlist = traktShowListByTvdbID(getWatchlistTVShowsFromTrakt())
-    
+    tvshows = utilities.getTrendingTVShowsFromTrakt()
+    watchlist = utilities.traktShowListByTvdbID(utilities.getWatchlistTVShowsFromTrakt())
+
     if tvshows == None: # tvshows = None => there was an error
         return # error already displayed in utilities.py
-    
+
     if len(tvshows) == 0:
-        xbmcgui.Dialog().ok("Trakt Utilities", "there are no trending tv shows")
+        xbmcgui.Dialog().ok(__language__(200).encode( "utf-8", "ignore" ), __language__(161).encode( "utf-8", "ignore" ))
         return
-    
+
     for tvshow in tvshows:
         if tvshow['imdb_id'] in watchlist:
             tvshow['watchlist'] = True
         else:
             tvshow['watchlist'] = False
-    
+
     # display trending tv shows
     import windows
-    ui = windows.TVShowsWindow("tvshows.xml", __settings__.getAddonInfo('path'), "Default")
-    ui.initWindow(tvshows, 'trending')
-    ui.doModal()
-    del ui
+    gui = windows.TVShowsWindow("tvshows.xml", __settings__.getAddonInfo('path'), "Default")
+    gui.initWindow(tvshows, 'trending')
+    gui.doModal()
+    del gui
