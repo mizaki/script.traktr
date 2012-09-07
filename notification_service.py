@@ -17,8 +17,8 @@ from utilities import Debug
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
-__maintainer__ = "Ralph-Gordon Paul"
-__email__ = "ralph-gordon.paul@uni-duesseldorf.de"
+__maintainer__ = "Andrew Etches"
+__email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 # Receives XBMC notifications and passes them off to the rating functions
