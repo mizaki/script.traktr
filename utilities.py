@@ -47,6 +47,9 @@ def Debug(msg, force=False):
         except UnicodeEncodeError:
             print "Traktr: " + msg.encode( "utf-8", "ignore" )
 
+def _(string_id):
+    """Returns the string from the language resource files specified by the id provided"""
+    return __language__(string_id).encode("utf-8", "ignore")
 
 import raw_xbmc_database
 
