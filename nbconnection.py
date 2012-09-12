@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#
+"""Module for running non-blocking HTTP(S) requests to trakt"""
 
 import time
 import thread
@@ -19,42 +19,51 @@ __maintainer__ = "Andrew Etches"
 __email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
-# Allows non-blocking http[s] requests
 class NBConnection():
-    def __init__(self, host, port=None, strict=None, timeout=None, https=False):
+    """Allows non-blocking HTTP(S) requests to trakt"""
+    def __init__(self, host, https=False):
         if https:
-            self.rawConnection = httplib.HTTPSConnection(host, port, strict, timeout)
+            self._raw_connection = httplib.HTTPSConnection(host)
         else:
-            self.rawConnection = httplib.HTTPConnection(host, port, strict, timeout)
+            self._raw_connection = httplib.HTTPConnection(host)
 
-        self.responce = None
-        self.responceLock = threading.Lock()
-        self.closing = False
+        self._response = None
+        self._response_lock = threading.Lock()
+        self._closing = False
 
-    def request(self, method, url, body = None, headers = {}):
-        self.rawConnection.request(method, url, body, headers)
+    def request(self, method, url, body = None, headers=None):
+        """Send raw HTTP(S) request to trakt"""
+        if headers == None:
+            headers = {}
 
-    def hasResult(self):
-        if self.responceLock.acquire(False):
-            self.responceLock.release()
+        self._raw_connection.request(method, url, body, headers)
+
+    def has_result(self):
+        """Checks if a result is available, doesn't block"""
+        if self._response_lock.acquire(False):
+            self._response_lock.release()
             return True
         else:
             return False
 
-    def getResult(self):
-        while not self.hasResult() and not self.closing:
+    def get_result(self):
+        """Block until a result's available and return it when it is"""
+        while not self.has_result() and not self._closing:
             time.sleep(1)
-        return self.responce
+        return self._response
 
-    def go(self):
-        self.responceLock.acquire()
-        thread.start_new_thread ( NBConnection._run, ( self, ) )
+    def fire(self):
+        """Create the new thread to run a request to trakt in"""
+        self._response_lock.acquire()
+        thread.start_new_thread(NBConnection._run, (self,))
 
     def _run(self):
-        self.responce = self.rawConnection.getresponse()
-        self.responceLock.release()
+        """Get a response from trakt in a new thread"""
+        self._response = self._raw_connection.getresponse()
+        self._response_lock.release()
 
     def close(self):
-        self.closing = True
-        self.rawConnection.close()
+        """Close the connection to trakt"""
+        self._closing = True
+        self._raw_connection.close()
 

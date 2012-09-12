@@ -166,7 +166,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             return data
         return None
 
-    conn.go()
+    conn.fire()
 
     while True:
         if xbmc.abortRequested:
@@ -177,11 +177,11 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
                 data['error'] = 'Abort requested, not waiting for responce'
                 return data
             return None
-        if conn.hasResult():
+        if conn.has_result():
             break
         time.sleep(0.1)
 
-    response = conn.getResult()
+    response = conn.get_result()
     raw = response.read()
     if closeConnection:
         conn.close()
@@ -796,19 +796,3 @@ def scrobbleEpisodeOnTrakt(tvdb_id, title, year, season, episode, duration, perc
         Debug("Error in request from 'scrobbleEpisodeOnTrakt()'")
     return responce
 
-
-"""
-ToDo:
-
-
-"""
-
-
-"""
-for later:
-First call "Player.GetActivePlayers" to determine the currently active player (audio, video or picture).
-If it is audio or video call Audio/VideoPlaylist.GetItems and read the "current" field to get the position of the
-currently playling item in the playlist. The "items" field contains an array of all items in the playlist and "items[current]" is
-the currently playing file. You can also tell jsonrpc which fields to return for every item in the playlist and therefore you'll have all the information you need.
-
-"""

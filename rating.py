@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-#
+"""Module used to launch rating dialogues and send ratings to trakt"""
 
 import xbmcaddon
 import utilities
+import windows
 
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
@@ -11,26 +12,26 @@ __maintainer__ = "Andrew Etches"
 __email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
-# read settings
-__settings__ = xbmcaddon.Addon( "script.traktr" )
 
-def ratingCheck(curVideo, watchedTime, totalTime, playlistLength):
-    __settings__ = xbmcaddon.Addon( "script.traktr" ) #read settings again, encase they have changed
-    # you can disable rating in options
-    rateMovieOption = __settings__.getSetting("rate_movie")
-    rateEpisodeOption = __settings__.getSetting("rate_episode")
-    rateEachInPlaylistOption = __settings__.getSetting("rate_each_playlist_item")
-    rateMinViewTimeOption = __settings__.getSetting("rate_min_view_time")
+def rating_check(current_video, watched_time, total_time, playlist_length):
+    """Check if a video should be rated and if so launches the correct rating window"""
+    settings = xbmcaddon.Addon("script.traktr")
 
-    if (watchedTime/totalTime)*100>=float(rateMinViewTimeOption):
-        if (playlistLength <= 1) or (rateEachInPlaylistOption == 'true'):
-            if curVideo['type'] == 'movie' and rateMovieOption == 'true':
-                doRateMovie(curVideo['id'])
-            if curVideo['type'] == 'episode' and rateEpisodeOption == 'true':
-                doRateEpisode(curVideo['id'])
+    rate_movies = settings.getSetting("rate_movie")
+    rate_episodes = settings.getSetting("rate_episode")
+    rate_each_playlist_item = settings.getSetting("rate_each_playlist_item")
+    rate_min_view_time = settings.getSetting("rate_min_view_time")
 
-# ask user if they liked the movie
-def doRateMovie(movieid=None, imdbid=None, title=None, year=None):
+    if (watched_time/total_time)*100>=float(rate_min_view_time):
+        if (playlist_length <= 1) or (rate_each_playlist_item == 'true'):
+            if current_video['type'] == 'movie' and rate_movies == 'true':
+                rate_movie(current_video['id'])
+            if current_video['type'] == 'episode' and rate_episodes == 'true':
+                rate_episode(current_video['id'])
+
+
+def rate_movie(movieid=None, imdbid=None, title=None, year=None):
+    """Launches the movie rating dialogue"""
     if movieid != None:
         match = utilities.getMovieDetailsFromXbmc(movieid, ['imdbnumber', 'title', 'year'])
         if not match:
@@ -41,20 +42,19 @@ def doRateMovie(movieid=None, imdbid=None, title=None, year=None):
         title = match['title']
         year = match['year']
 
-    # display rate dialog
-    import windows
     if utilities.getTraktRatingType() == "advanced":
-        gui = windows.RateMovieDialog("rate_advanced.xml", __settings__.getAddonInfo('path'), "Default")
+        gui = windows.RateMovieDialog("rate_advanced.xml")
     else:
-        gui = windows.RateMovieDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+        gui = windows.RateMovieDialog("rate.xml")
 
     gui.initDialog(imdbid, title, year, utilities.getMovieRatingFromTrakt(imdbid, title, year))
     gui.doModal()
     del gui
 
-# ask user if they liked the episode
-def doRateEpisode(episodeId):
-    match = utilities.getEpisodeDetailsFromXbmc(episodeId, ['showtitle', 'season', 'episode'])
+
+def rate_episode(episode_id):
+    """Launches the episode rating dialogue"""
+    match = utilities.getEpisodeDetailsFromXbmc(episode_id, ['showtitle', 'season', 'episode'])
     if not match:
         #add error message here
         return
@@ -65,12 +65,10 @@ def doRateEpisode(episodeId):
     season = match['season']
     episode = match['episode']
 
-    # display rate dialog
-    import windows
     if utilities.getTraktRatingType() == "advanced":
-        gui = windows.RateEpisodeDialog("rate_advanced.xml", __settings__.getAddonInfo('path'), "Default")
+        gui = windows.RateEpisodeDialog("rate_advanced.xml")
     else:
-        gui = windows.RateEpisodeDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+        gui = windows.RateEpisodeDialog("rate.xml")
 
     gui.initDialog(tvdbid, title, year, season, episode, utilities.getEpisodeRatingFromTrakt(tvdbid, title, year, season, episode))
     gui.doModal()

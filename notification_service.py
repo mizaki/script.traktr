@@ -24,13 +24,12 @@ __status__ = "Production"
 # Receives XBMC notifications and passes them off to the rating functions
 class NotificationService(threading.Thread):
     """ Receives XBMC notifications and passes them off as needed """
-
     TELNET_ADDRESS = 'localhost'
     TELNET_PORT = 9090
 
-    _abortRequested = False
+    abort_requested = False
     _scrobbler = None
-    _notificationBuffer = ""
+    _notification_buffer = ""
 
 
     def _forward(self, notification):
@@ -39,17 +38,17 @@ class NotificationService(threading.Thread):
             return
 
         if notification['method'] == 'Player.OnStop':
-            self._scrobbler.playbackEnded()
+            self._scrobbler.playback_ended()
         elif notification['method'] == 'Player.OnPlay':
             if 'data' in notification['params'] and 'item' in notification['params']['data'] and 'id' in notification['params']['data']['item'] and 'type' in notification['params']['data']['item']:
-                self._scrobbler.playbackStarted(notification['params']['data'])
+                self._scrobbler.playback_started(notification['params']['data'])
         elif notification['method'] == 'Player.OnPause':
-            self._scrobbler.playbackPaused()
+            self._scrobbler.playback_paused()
         elif notification['method'] == 'System.OnQuit':
-            self._abortRequested = True
+            self.abort_requested = True
 
 
-    def _readNotification(self, telnet):
+    def _read_notification(self, telnet):
         """ Read a notification from the telnet connection, blocks until the data is available, or else raises an EOFError if the connection is lost """
         while True:
             try:
@@ -60,10 +59,10 @@ class NotificationService(threading.Thread):
             if addbuffer == "":
                 raise EOFError
 
-            self._notificationBuffer += addbuffer
+            self._notification_buffer += addbuffer
             try:
-                data, offset = json.JSONDecoder().raw_decode(self._notificationBuffer)
-                self._notificationBuffer = self._notificationBuffer[offset:]
+                data, offset = json.JSONDecoder().raw_decode(self._notification_buffer)
+                self._notification_buffer = self._notification_buffer[offset:]
             except ValueError:
                 continue
 
@@ -71,17 +70,16 @@ class NotificationService(threading.Thread):
 
 
     def run(self):
-        #while xbmc is running
         self._scrobbler = Scrobbler()
         self._scrobbler.start()
         telnet = telnetlib.Telnet(self.TELNET_ADDRESS, self.TELNET_PORT)
 
-        while not (self._abortRequested or xbmc.abortRequested):
+        while not (self.abort_requested or xbmc.abortRequested):
             try:
-                data = self._readNotification(telnet)
+                data = self._read_notification(telnet)
             except EOFError:
                 telnet = telnetlib.Telnet(self.TELNET_ADDRESS, self.TELNET_PORT)
-                self._notificationBuffer = ""
+                self._notification_buffer = ""
                 continue
 
             Debug("[Notification Service] message: " + str(data))

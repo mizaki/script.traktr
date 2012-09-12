@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-#
+"""Run at startup to sync items to trakt or clean the trakt library"""
 
 import xbmc
 import xbmcaddon
 
-from utilities import Debug
+from utilities import Debug, _
 import utilities
 import notification_service as ns
 import sync_update as su
@@ -17,48 +17,50 @@ __email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
 __settings__ = xbmcaddon.Addon( "script.traktr" )
-__language__ = __settings__.getLocalizedString
 
 Debug("service: " + __settings__.getAddonInfo("id") + " - version: " + __settings__.getAddonInfo("version"))
 
 # starts update/sync
 def autostart():
+    """Run when xbmc stars up, runs tv or movie sync and cleans based on user settings"""
     if utilities.checkSettings(True):
-        notificationThread = ns.NotificationService()
-        notificationThread.start()
+        notification_thread = ns.NotificationService()
+        notification_thread.start()
 
         autosync_movies = __settings__.getSetting("autosync_movies")
         autosync_tv = __settings__.getSetting("autosync_tv")
         autosync_cleanmoviecollection = __settings__.getSetting("autosync_cleanmovies")
         autosync_cleantvshowcollection = __settings__.getSetting("autosync_cleantv")
+
         try:
             if autosync_movies == "true":
-                Debug("autostart sync movies")
-                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(110).encode("utf-8", "ignore")) # start sync movies
+                utilities.notification(_(200), _(110)) # start sync movies
 
-                su.syncMovies(daemon=True)
+                su.sync_movies(daemon=True)
 
                 if autosync_cleanmoviecollection == "true":
-                    su.cleanMovies(daemon=True)
+                    su.clean_movies(daemon=True)
 
             if xbmc.abortRequested:
                 raise SystemExit()
 
             if autosync_tv == "true":
-                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(111).encode("utf-8", "ignore")) # start tvshow collection update
+                utilities.notification(_(200), _(111)) # start tvshow collection update
 
-                su.syncTV(daemon=True)
+                su.sync_tv(daemon=True)
+
                 if autosync_cleantvshowcollection:
-                    su.cleanTV(daemon=True)
+                    su.clean_tv(daemon=True)
+
             if xbmc.abortRequested:
                 raise SystemExit()
 
             if autosync_tv == "true" or autosync_movies == "true":
-                utilities.notification(__language__(200).encode( "utf-8", "ignore" ), __language__(112).encode("utf-8", "ignore")) # update / sync done
+                utilities.notification(_(200), _(112)) # update / sync done
         except SystemExit:
-            notificationThread.abortRequested = True
+            notification_thread.abort_requested = True
             Debug("[Service] Auto sync processes aborted due to shutdown request")
 
-        notificationThread.join()
+        notification_thread.join()
 
 autostart()

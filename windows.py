@@ -213,7 +213,7 @@ class MoviesWindow(xbmcgui.WindowXML):
                 li.setProperty('Watchlist','true')
                 movie['watchlist'] = True
         elif actions[select] == 'rate':
-            rating.doRateMovie(imdbid=movie['imdb_id'], title=movie['title'], year=movie['year'])
+            rating.rate_movie(imdbid=movie['imdb_id'], title=movie['title'], year=movie['year'])
 
     def onAction(self, action):
         if action.getId() == 0:
