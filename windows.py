@@ -471,7 +471,7 @@ class TVShowsWindow(xbmcgui.WindowXML):
 
 class RateDialog(xbmcgui.WindowXMLDialog):
     """Base class implementing the methods that don't change in the rating dialogues"""
-    def __init__(self, xml, fallback_path, defaultskinname="Default", forcefallback=False):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
         super(RateDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
 
         self._id_to_rating_string = {
@@ -541,7 +541,7 @@ class RateDialog(xbmcgui.WindowXMLDialog):
 
 
 class RateMovieDialog(RateDialog):
-    def __init__(self, xml, fallback_path, defaultskinname="Default", forcefallback=False):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
         super(RateMovieDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
         self.imdbid = None
         self.title = None
@@ -562,7 +562,7 @@ class RateMovieDialog(RateDialog):
 
 
 class RateEpisodeDialog(RateDialog):
-    def __init__(self, xml, fallback_path, defaultskinname="Default", forcefallback=False):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
         super(RateEpisodeDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
         self.tvdbid = None
         self.title = None
@@ -604,7 +604,7 @@ class RateEpisodeDialog(RateDialog):
 
 
 class RateShowDialog(RateDialog):
-    def __init__(self, xml, fallback_path, defaultskinname="Default", forcefallback=False):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
         super(RateShowDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
         self.tvdbid = None
         self.title = None

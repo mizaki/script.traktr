@@ -12,6 +12,7 @@ __maintainer__ = "Andrew Etches"
 __email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
+__settings__ = xbmcaddon.Addon( "script.traktr" )
 
 def rating_check(current_video, watched_time, total_time, playlist_length):
     """Check if a video should be rated and if so launches the correct rating window"""
@@ -43,9 +44,9 @@ def rate_movie(movieid=None, imdbid=None, title=None, year=None):
         year = match['year']
 
     if utilities.getTraktRatingType() == "advanced":
-        gui = windows.RateMovieDialog("rate_advanced.xml")
+        gui = windows.RateMovieDialog("rate_advanced.xml", __settings__.getAddonInfo('path'))
     else:
-        gui = windows.RateMovieDialog("rate.xml")
+        gui = windows.RateMovieDialog("rate.xml", __settings__.getAddonInfo('path'))
 
     gui.initDialog(imdbid, title, year, utilities.getMovieRatingFromTrakt(imdbid, title, year))
     gui.doModal()
@@ -66,9 +67,9 @@ def rate_episode(episode_id):
     episode = match['episode']
 
     if utilities.getTraktRatingType() == "advanced":
-        gui = windows.RateEpisodeDialog("rate_advanced.xml")
+        gui = windows.RateEpisodeDialog("rate_advanced.xml", __settings__.getAddonInfo('path'))
     else:
-        gui = windows.RateEpisodeDialog("rate.xml")
+        gui = windows.RateEpisodeDialog("rate.xml", __settings__.getAddonInfo('path'))
 
     gui.initDialog(tvdbid, title, year, season, episode, utilities.getEpisodeRatingFromTrakt(tvdbid, title, year, season, episode))
     gui.doModal()
