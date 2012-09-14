@@ -245,34 +245,12 @@ def traktShowListByTvdbID(data):
 
     return trakt_tvshows
 
-# set episodes seen on trakt
-def setEpisodesSeenOnTrakt(tvdb_id, title, year, episodes):
-    data = traktJsonRequest('POST', '/show/episode/seen/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'episodes': episodes})
-    if data == None:
-        Debug("Error in request from 'setEpisodeSeenOnTrakt()'")
-    return data
-
-# set episodes unseen on trakt
-def setEpisodesUnseenOnTrakt(tvdb_id, title, year, episodes):
-    data = traktJsonRequest('POST', '/show/episode/unseen/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'episodes': episodes})
-    if data == None:
-        Debug("Error in request from 'setEpisodesUnseenOnTrakt()'")
-    return data
-
 # set movies seen on trakt
 #  - movies, required fields are 'plays', 'last_played' and 'title', 'year' or optionally 'imdb_id'
 def setMoviesSeenOnTrakt(movies):
     data = traktJsonRequest('POST', '/movie/seen/%%API_KEY%%', {'movies': movies})
     if data == None:
         Debug("Error in request from 'setMoviesSeenOnTrakt()'")
-    return data
-
-# set movies unseen on trakt
-#  - movies, required fields are 'plays', 'last_played' and 'title', 'year' or optionally 'imdb_id'
-def setMoviesUnseenOnTrakt(movies):
-    data = traktJsonRequest('POST', '/movie/unseen/%%API_KEY%%', {'movies': movies})
-    if data == None:
-        Debug("Error in request from 'setMoviesUnseenOnTrakt()'")
     return data
 
 # get tvshow collection from trakt server
