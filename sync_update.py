@@ -132,7 +132,11 @@ def _parse_xbmc_structure():
         xbmc_shows[show['imdbnumber']]['data'] = {}
 
     for episode in xbmc_raw_episodes:
-        tvdbid = xbmc_map_tvshowid_tvdbid[episode['tvshowid']]
+        try:
+            tvdbid = xbmc_map_tvshowid_tvdbid[episode['tvshowid']]
+        except KeyError:
+            continue
+
         season_num = episode['season']
         episode_num = episode['episode']
 
