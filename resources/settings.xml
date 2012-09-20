@@ -4,7 +4,7 @@
         <setting id="username" type="text" label="2" default="" />
         <setting id="password" type="text" option="hidden" label="3" default="" />
         <setting id="debug" type="bool" label="1" default="false"/>
-        <setting id="https" type="bool" label="4" default="false"/>
+        <setting id="https" type="bool" label="4" default="true"/>
     </category>
     <category label="10"><!-- Auto Syncing -->
         <setting id="autosync_movies" type="bool" label="11" default="false"/>
@@ -13,8 +13,8 @@
         <setting id="autosync_cleantvshowcollection" type="bool" label="14" default="false"/>
     </category>
     <category label="20"><!-- Rating -->
-        <setting id="rate_movie" type="bool" label="21" default="true"/>
-        <setting id="rate_episode" type="bool" label="22" default="true"/>
+        <setting id="rate_movie" type="bool" label="21" default="false"/>
+        <setting id="rate_episode" type="bool" label="22" default="false"/>
         <setting id="rate_each_playlist_item" type="bool" label="23" default="true"/>
         <setting id="rate_min_view_time" type="slider" label="24" range="0,5,100" default="75"/>
     </category>
