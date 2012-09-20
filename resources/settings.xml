@@ -4,7 +4,6 @@
         <setting id="username" type="text" label="2" default="" />
         <setting id="password" type="text" option="hidden" label="3" default="" />
         <setting id="debug" type="bool" label="1" default="false"/>
-        <setting id="https" type="bool" label="4" default="true"/>
     </category>
     <category label="10"><!-- Auto Syncing -->
         <setting id="autosync_movies" type="bool" label="11" default="false"/>

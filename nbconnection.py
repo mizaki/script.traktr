@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module for running non-blocking HTTP(S) requests to trakt"""
+"""Module for running non-blocking HTTPS requests to trakt"""
 
 import time
 import thread
@@ -21,18 +21,14 @@ __status__ = "Production"
 
 class NBConnection():
     """Allows non-blocking HTTP(S) requests to trakt"""
-    def __init__(self, host, https=False):
-        if https:
-            self._raw_connection = httplib.HTTPSConnection(host)
-        else:
-            self._raw_connection = httplib.HTTPConnection(host)
-
+    def __init__(self, host):
+        self._raw_connection = httplib.HTTPSConnection(host)
         self._response = None
         self._response_lock = threading.Lock()
         self._closing = False
 
     def request(self, method, url, body = None, headers=None):
-        """Send raw HTTP(S) request to trakt"""
+        """Send raw HTTPS request to trakt"""
         if headers == None:
             headers = {}
 

@@ -101,12 +101,8 @@ def checkSettings(daemon=False):
 
 # get a connection to trakt
 def getTraktConnection():
-    https = __settings__.getSetting('https')
     try:
-        if (https == 'true'):
-            conn = nbconnection.NBConnection('api.trakt.tv', https=True)
-        else:
-            conn = nbconnection.NBConnection('api.trakt.tv')
+        conn = nbconnection.NBConnection('api.trakt.tv')
     except socket.timeout:
         Debug("getTraktConnection: can't connect to trakt - timeout")
         return None
