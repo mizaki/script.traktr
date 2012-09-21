@@ -18,8 +18,8 @@
         <setting id="rate_min_view_time" type="slider" label="24" range="0,5,100" default="75"/>
     </category>
     <category label="30"><!-- Scrobbling -->
-        <setting id="scrobble_movie" type="bool" label="31" default="false"/>
-        <setting id="scrobble_episode" type="bool" label="32" default="false"/>
+        <setting id="scrobble_movie" type="bool" label="31" default="true"/>
+        <setting id="scrobble_episode" type="bool" label="32" default="true"/>
         <setting id="scrobble_min_view_time" type="slider" label="33" range="0,5,100" default="75"/>
     </category>
 </settings>
