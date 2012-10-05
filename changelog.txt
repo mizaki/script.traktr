@@ -1,3 +1,7 @@
+Version 1.0.1:
+    - Fixed key error
+    - More sane defaults
+
 Version 1.0.0:
     - Forked version, renamed to traktr
     - Added frodo support
