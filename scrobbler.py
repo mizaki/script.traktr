@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#
+"""Contains the scrobbler class which scrobbles episodes and movies that are being watched"""
 
 import xbmc
 import xbmcaddon
@@ -18,150 +18,160 @@ __maintainer__ = "Andrew Etches"
 __email__ = "andrew.etches@dur.ac.uk"
 __status__ = "Production"
 
-# read settings
-__settings__ = xbmcaddon.Addon( "script.traktr" )
-__language__ = __settings__.getLocalizedString
+__settings__ = xbmcaddon.Addon("script.traktr")
+
 
 class Scrobbler(threading.Thread):
-    totalTime = 1
-    watchedTime = 0
-    startTime = 0
-    curVideo = None
-    pinging = False
-    playlistLength = 1
-    abortRequested = False
+    """Scrobbles movies and episodes that are being watched"""
+    def __init__(self):
+        super(Scrobbler, self).__init__()
+
+        self._total_time = 1
+        self._watched_time = 0
+        self._start_time = 0
+        self._current_video = None
+        self._pinging = False
+        self._playlist_length = 1
+        self.abort_requested = False
+
 
     def run(self):
         # When requested ping trakt to say that the user is still watching the item
         count = 0
-        while (not (self.abortRequested or xbmc.abortRequested)):
-            time.sleep(5) # 1min wait
-            #Debug("[Scrobbler] Cycling " + str(self.pinging))
-            if self.pinging:
+        while (not (self.abort_requested or xbmc.abortRequested)):
+            time.sleep(5)
+            if self._pinging:
                 count += 1
                 if count >= 100:
-                    Debug("[Scrobbler] Pinging watching "+str(self.curVideo))
+                    Debug("[Scrobbler] Pinging watching "+str(self._current_video))
                     tmp = time.time()
-                    self.watchedTime += tmp - self.startTime
-                    self.startTime = tmp
-                    self.startedWatching()
+                    self._watched_time += tmp - self._start_time
+                    self._start_time = tmp
+                    self._started_watching()
                     count = 0
             else:
                 count = 0
 
         Debug("Scrobbler stopping")
 
-    def playbackStarted(self, data):
-        self.curVideo = data['item']
-        if self.curVideo != None:
-            if 'type' in self.curVideo and 'id' in self.curVideo:
-                Debug("[Scrobbler] Watching: "+self.curVideo['type']+" - "+str(self.curVideo['id']))
+
+    def playback_started(self, data):
+        self._current_video = data['item']
+        if self._current_video != None:
+            if 'type' in self._current_video and 'id' in self._current_video:
+                Debug("[Scrobbler] Watching: "+self._current_video['type']+" - "+str(self._current_video['id']))
                 try:
                     if not xbmc.Player().isPlayingVideo():
                         Debug("[Scrobbler] Suddenly stopped watching item")
                         return
                     time.sleep(1) # Wait for possible silent seek (caused by resuming)
-                    self.watchedTime = xbmc.Player().getTime()
-                    self.totalTime = xbmc.Player().getTotalTime()
-                    if self.totalTime == 0:
-                        if self.curVideo['type'] == 'movie':
-                            self.totalTime = 90
-                        elif self.curVideo['type'] == 'episode':
-                            self.totalTime = 30
+                    self._watched_time = xbmc.Player().getTime()
+                    self._total_time = xbmc.Player().getTotalTime()
+                    if self._total_time == 0:
+                        if self._current_video['type'] == 'movie':
+                            self._total_time = 90
+                        elif self._current_video['type'] == 'episode':
+                            self._total_time = 30
                         else:
-                            self.totalTime = 1
-                    self.playlistLength = utilities.getPlaylistLengthFromXBMCPlayer(data['player']['playerid'])
-                    if (self.playlistLength == 0):
+                            self._total_time = 1
+                    self._playlist_length = utilities.getPlaylistLengthFromXBMCPlayer(data['player']['playerid'])
+                    if (self._playlist_length == 0):
                         Debug("[Scrobbler] Warning: Cant find playlist length?!, assuming that this item is by itself")
-                        self.playlistLength = 1
+                        self._playlist_length = 1
                 except:
                     Debug("[Scrobbler] Suddenly stopped watching item, or error: " + str(sys.exc_info()[0]))
-                    self.curVideo = None
-                    self.startTime = 0
+                    self._current_video = None
+                    self._start_time = 0
                     return
-                self.startTime = time.time()
-                self.startedWatching()
-                self.pinging = True
+                self._start_time = time.time()
+                self._started_watching()
+                self._pinging = True
             else:
-                self.curVideo = None
-                self.startTime = 0
+                self._current_video = None
+                self._start_time = 0
 
-    def playbackPaused(self):
-        if self.startTime != 0:
-            self.watchedTime += time.time() - self.startTime
-            Debug("[Scrobbler] Paused after: "+str(self.watchedTime))
-            self.startTime = 0
 
-    def playbackEnded(self):
-        if self.startTime != 0:
-            if self.curVideo == None:
+    def playback_paused(self):
+        if self._start_time != 0:
+            self._watched_time += time.time() - self._start_time
+            Debug("[Scrobbler] Paused after: "+str(self._watched_time))
+            self._start_time = 0
+
+
+    def playback_ended(self):
+        if self._start_time != 0:
+            if self._current_video == None:
                 Debug("[Scrobbler] Warning: Playback ended but video forgotten")
                 return
-            self.watchedTime += time.time() - self.startTime
-            self.pinging = False
-            if self.watchedTime != 0:
-                if 'type' in self.curVideo and 'id' in self.curVideo:
-                    self.check()
-                    rating.ratingCheck(self.curVideo, self.watchedTime, self.totalTime, self.playlistLength)
-                self.watchedTime = 0
-            self.startTime = 0
+            self._watched_time += time.time() - self._start_time
+            self._pinging = False
+            if self._watched_time != 0:
+                if 'type' in self._current_video and 'id' in self._current_video:
+                    self._check()
+                    rating.rating_check(self._current_video, self._watched_time, self._total_time, self._playlist_length)
+                self._watched_time = 0
+            self._start_time = 0
 
-    def startedWatching(self):
-        scrobbleMovieOption = __settings__.getSetting("scrobble_movie")
-        scrobbleEpisodeOption = __settings__.getSetting("scrobble_episode")
 
-        if self.curVideo['type'] == 'movie' and scrobbleMovieOption == 'true':
-            match = utilities.getMovieDetailsFromXbmc(self.curVideo['id'], ['imdbnumber', 'title', 'year'])
+    def _started_watching(self):
+        scrobble_movies = __settings__.getSetting("scrobble_movie")
+        scrobble_episodes = __settings__.getSetting("scrobble_episode")
+
+        if self._current_video['type'] == 'movie' and scrobble_movies == 'true':
+            match = utilities.getMovieDetailsFromXbmc(self._current_video['id'], ['imdbnumber', 'title', 'year'])
             if match == None:
                 return
-            responce = utilities.watchingMovieOnTrakt(match['imdbnumber'], match['title'], match['year'], self.totalTime/60, int(100*self.watchedTime/self.totalTime))
-            if responce != None:
-                Debug("[Scrobbler] Watch responce: "+str(responce))
-        elif self.curVideo['type'] == 'episode' and scrobbleEpisodeOption == 'true':
-            match = utilities.getEpisodeDetailsFromXbmc(self.curVideo['id'], ['showtitle', 'season', 'episode'])
+            response = utilities.watchingMovieOnTrakt(match['imdbnumber'], match['title'], match['year'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            if response != None:
+                Debug("[Scrobbler] Watch response: "+str(response))
+        elif self._current_video['type'] == 'episode' and scrobble_episodes == 'true':
+            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode'])
             if match == None:
                 return
-            responce = utilities.watchingEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self.totalTime/60, int(100*self.watchedTime/self.totalTime))
-            if responce != None:
-                Debug("[Scrobbler] Watch responce: "+str(responce))
+            response = utilities.watchingEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            if response != None:
+                Debug("[Scrobbler] Watch responce: "+str(response))
 
-    def stoppedWatching(self):
-        scrobbleMovieOption = __settings__.getSetting("scrobble_movie")
-        scrobbleEpisodeOption = __settings__.getSetting("scrobble_episode")
 
-        if self.curVideo['type'] == 'movie' and scrobbleMovieOption == 'true':
-            responce = utilities.cancelWatchingMovieOnTrakt()
-            if responce != None:
-                Debug("[Scrobbler] Cancel watch responce: "+str(responce))
-        elif self.curVideo['type'] == 'episode' and scrobbleEpisodeOption == 'true':
+    def _stopped_watching(self):
+        scrobble_movies = __settings__.getSetting("scrobble_movie")
+        scrobble_episodes = __settings__.getSetting("scrobble_episode")
+
+        if self._current_video['type'] == 'movie' and scrobble_movies == 'true':
+            response = utilities.cancelWatchingMovieOnTrakt()
+            if response != None:
+                Debug("[Scrobbler] Cancel watch responce: "+str(response))
+        elif self._current_video['type'] == 'episode' and scrobble_episodes == 'true':
             responce = utilities.cancelWatchingEpisodeOnTrakt()
             if responce != None:
                 Debug("[Scrobbler] Cancel watch responce: "+str(responce))
 
-    def scrobble(self):
-        scrobbleMovieOption = __settings__.getSetting("scrobble_movie")
-        scrobbleEpisodeOption = __settings__.getSetting("scrobble_episode")
 
-        if self.curVideo['type'] == 'movie' and scrobbleMovieOption == 'true':
-            match = utilities.getMovieDetailsFromXbmc(self.curVideo['id'], ['imdbnumber', 'title', 'year'])
+    def _scrobble(self):
+        scrobble_movies = __settings__.getSetting("scrobble_movie")
+        scrobble_episodes = __settings__.getSetting("scrobble_episode")
+
+        if self._current_video['type'] == 'movie' and scrobble_movies == 'true':
+            match = utilities.getMovieDetailsFromXbmc(self._current_video['id'], ['imdbnumber', 'title', 'year'])
             if match == None:
                 return
-            responce = utilities.scrobbleMovieOnTrakt(match['imdbnumber'], match['title'], match['year'], self.totalTime/60, int(100*self.watchedTime/self.totalTime))
-            if responce != None:
-                Debug("[Scrobbler] Scrobble responce: "+str(responce))
-        elif self.curVideo['type'] == 'episode' and scrobbleEpisodeOption == 'true':
-            match = utilities.getEpisodeDetailsFromXbmc(self.curVideo['id'], ['showtitle', 'season', 'episode'])
+            response = utilities.scrobbleMovieOnTrakt(match['imdbnumber'], match['title'], match['year'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            if response != None:
+                Debug("[Scrobbler] Scrobble responce: "+str(response))
+        elif self._current_video['type'] == 'episode' and scrobble_episodes == 'true':
+            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode'])
             if match == None:
                 return
-            responce = utilities.scrobbleEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self.totalTime/60, int(100*self.watchedTime/self.totalTime))
-            if responce != None:
-                Debug("[Scrobbler] Scrobble responce: "+str(responce))
+            response = utilities.scrobbleEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            if response != None:
+                Debug("[Scrobbler] Scrobble responce: "+str(response))
 
-    def check(self):
-        __settings__ = xbmcaddon.Addon( "script.traktr" )
-        scrobbleMinViewTimeOption = __settings__.getSetting("scrobble_min_view_time")
 
-        if (self.watchedTime/self.totalTime)*100 >= float(scrobbleMinViewTimeOption):
-            self.scrobble()
+    def _check(self):
+        reload_settings = xbmcaddon.Addon( "script.traktr" )
+        min_view_time = reload_settings.getSetting("scrobble_min_view_time")
+
+        if (self._watched_time/self._total_time)*100 >= float(min_view_time):
+            self._scrobble()
         else:
-            self.stoppedWatching()
+            self._stopped_watching()

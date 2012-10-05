@@ -5,7 +5,6 @@
 	<string id="1">Enable debug mode</string>
     <string id="2">Username</string>
     <string id="3">Password</string>
-    <string id="4">Use secure connection (HTTPS)</string>
 
     <string id="10">Auto Syncing</string>
     <string id="11">Auto sync movies at startup</string>
@@ -94,6 +93,6 @@
     <string id="320">Watchlist Movies</string>
     <string id="321">Watchlist TV Shows</string>
 
-    <string id="330">Recommened Movies</string>
-    <string id="331">Recommened TV Shows</string>
+    <string id="330">Recommended Movies</string>
+    <string id="331">Recommended TV Shows</string>
 </strings>

@@ -7,6 +7,8 @@ from utilities import Debug
 import utilities
 import rating
 
+import functools
+
 __author__ = "Ralph-Gordon Paul, Adrian Cowan"
 __credits__ = ["Ralph-Gordon Paul", "Adrian Cowan", "Justin Nemeth",  "Sean Rudford"]
 __license__ = "GPL"
@@ -21,8 +23,6 @@ __language__ = __settings__.getLocalizedString
 BACKGROUND = 102
 TITLE = 103
 OVERVIEW = 104
-POSTER = 105
-PLAY_BUTTON = 106
 YEAR = 107
 RUNTIME = 108
 TAGLINE = 109
@@ -31,7 +31,7 @@ TVSHOW_LIST = 110
 RATING = 111
 WATCHERS = 112
 
-RATE_SCENE = 98
+
 RATE_TITLE = 100
 RATE_CUR_NO_RATING = 101
 RATE_CUR_LOVE = 102
@@ -211,7 +211,7 @@ class MoviesWindow(xbmcgui.WindowXML):
                 li.setProperty('Watchlist','true')
                 movie['watchlist'] = True
         elif actions[select] == 'rate':
-            rating.doRateMovie(imdbid=movie['imdb_id'], title=movie['title'], year=movie['year'])
+            rating.rate_movie(imdbid=movie['imdb_id'], title=movie['title'], year=movie['year'])
 
     def onAction(self, action):
         if action.getId() == 0:
@@ -232,78 +232,6 @@ class MoviesWindow(xbmcgui.WindowXML):
         else:
             Debug("Uncaught action (movies): "+str(action.getId()))
 
-class MovieWindow(xbmcgui.WindowXML):
-
-    movie = None
-
-    def initWindow(self, movie):
-        self.movie = movie
-
-    def onInit(self):
-        if self.movie != None:
-            try:
-                self.getControl(BACKGROUND).setImage(self.movie['images']['fanart'])
-            except KeyError:
-                Debug("KeyError for Backround")
-            except TypeError:
-                Debug("TypeError for Backround")
-            try:
-                self.getControl(POSTER).setImage(self.movie['images']['poster'])
-            except KeyError:
-                Debug("KeyError for Poster")
-            except TypeError:
-                Debug("TypeError for Poster")
-            try:
-                self.getControl(TITLE).setLabel(self.movie['title'])
-            except KeyError:
-                Debug("KeyError for Title")
-            except TypeError:
-                Debug("TypeError for Title")
-            try:
-                self.getControl(OVERVIEW).setText(self.movie['overview'])
-            except KeyError:
-                Debug("KeyError for Overview")
-            except TypeError:
-                Debug("TypeError for Overview")
-            try:
-                self.getControl(YEAR).setLabel("Year: " + str(self.movie['year']))
-            except KeyError:
-                Debug("KeyError for Year")
-            except TypeError:
-                Debug("TypeError for Year")
-            try:
-                self.getControl(RUNTIME).setLabel("Runtime: " + str(self.movie['runtime']) + " Minutes")
-            except KeyError:
-                Debug("KeyError for Runtime")
-            except TypeError:
-                Debug("TypeError for Runtime")
-            try:
-                self.getControl(TAGLINE).setLabel(self.movie['tagline'])
-            except KeyError:
-                Debug("KeyError for Runtime")
-            except TypeError:
-                Debug("TypeError for Runtime")
-            try:
-                self.playbutton = self.getControl(PLAY_BUTTON)
-                self.setFocus(self.playbutton)
-            except (KeyError, TypeError):
-                pass
-
-    def onFocus( self, controlId ):
-        self.controlId = controlId
-
-    def onClick(self, controlId):
-        if controlId == PLAY_BUTTON:
-            pass
-
-    def onAction(self, action):
-        if action.getId() == 0:
-            return
-        if action.getId() in (ACTION_PARENT_DIRECTORY, ACTION_PREVIOUS_MENU):
-            Debug("Closing MovieInfoWindow")
-            self.close()
-        else:
-            Debug("Uncaught action (movie info): "+str(action.getId()))
 
 class TVShowsWindow(xbmcgui.WindowXML):
 
@@ -466,140 +394,107 @@ class TVShowsWindow(xbmcgui.WindowXML):
         else:
             Debug("Uncaught action (tv shows): "+str(action.getId()))
 
-class RateMovieDialog(xbmcgui.WindowXMLDialog):
+
+class RateDialog(xbmcgui.WindowXMLDialog):
+    """Base class implementing the methods that don't change in the rating dialogues"""
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
+        super(RateDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
+
+        self._id_to_rating_string = {
+            RATE_LOVE_BTN: "love", RATE_HATE_BTN: "hate", RATE_ADVANCED_1_BTN: "1",
+            RATE_ADVANCED_2_BTN: "2", RATE_ADVANCED_3_BTN: "3", RATE_ADVANCED_4_BTN: "4",
+            RATE_ADVANCED_5_BTN: "5", RATE_ADVANCED_6_BTN: "6", RATE_ADVANCED_7_BTN: "7",
+            RATE_ADVANCED_8_BTN: "8", RATE_ADVANCED_9_BTN: "9", RATE_ADVANCED_10_BTN: "10"
+        }
+
+        self._cur_rating = None
+        self._control_id = None
+        self._rating_type = utilities.getTraktRatingType()
+
+    def initDialog(self, cur_rating):
+        """Set up the generic current rating code"""
+        self._cur_rating = cur_rating
+        if self._cur_rating not in self._id_to_rating_string.values():
+            self._cur_rating = None
+
+    def onFocus(self, control_id):
+        """Update currently selected item id"""
+        self._control_id = control_id
+
+    def onInit(self, header):
+        """Set up the generic window code"""
+        self.getControl(RATE_TITLE).setLabel(header)
+        self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
+        self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)
+        self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
+        self.setFocus(self.getControl(RATE_SKIP_RATING))
+        self._update_rated_button()
+
+    def onClick(self, control_id, method):
+        """Perform action when item clicked"""
+        self._cur_rating = self._id_to_rating_string[control_id]
+        self._update_rated_button()
+
+        if control_id in (RATE_CUR_LOVE, RATE_CUR_HATE, RATE_CUR_ADVANCED_1, RATE_CUR_ADVANCED_2, RATE_CUR_ADVANCED_3, RATE_CUR_ADVANCED_4, RATE_CUR_ADVANCED_5, RATE_CUR_ADVANCED_6, RATE_CUR_ADVANCED_7, RATE_CUR_ADVANCED_8, RATE_CUR_ADVANCED_9, RATE_CUR_ADVANCED_10):
+            self._cur_rating = "unrate"
+
+        if self._cur_rating != "skip":
+            method(self._cur_rating)
+
+        self.close()
+
+    def _update_rated_button(self):
+        """Set the current rating button"""
+        self.getControl(RATE_CUR_NO_RATING).setVisible(False if self._cur_rating != None else True)
+        self.getControl(RATE_CUR_LOVE).setVisible(False if self._cur_rating != "love" else True)
+        self.getControl(RATE_CUR_HATE).setVisible(False if self._cur_rating != "hate" else True)
+        if self._rating_type == "advanced":
+            self.getControl(RATE_CUR_ADVANCED_1).setVisible(False if self._cur_rating != "1" else True)
+            self.getControl(RATE_CUR_ADVANCED_2).setVisible(False if self._cur_rating != "2" else True)
+            self.getControl(RATE_CUR_ADVANCED_3).setVisible(False if self._cur_rating != "3" else True)
+            self.getControl(RATE_CUR_ADVANCED_4).setVisible(False if self._cur_rating != "4" else True)
+            self.getControl(RATE_CUR_ADVANCED_5).setVisible(False if self._cur_rating != "5" else True)
+            self.getControl(RATE_CUR_ADVANCED_6).setVisible(False if self._cur_rating != "6" else True)
+            self.getControl(RATE_CUR_ADVANCED_7).setVisible(False if self._cur_rating != "7" else True)
+            self.getControl(RATE_CUR_ADVANCED_8).setVisible(False if self._cur_rating != "8" else True)
+            self.getControl(RATE_CUR_ADVANCED_9).setVisible(False if self._cur_rating != "9" else True)
+            self.getControl(RATE_CUR_ADVANCED_10).setVisible(False if self._cur_rating != "10" else True)
+
+    def onAction(self, action):
+        if action.getId() in (ACTION_PARENT_DIRECTORY, ACTION_PREVIOUS_MENU):
+            Debug("Closing Dialog")
+            self.close()
+
+
+class RateMovieDialog(RateDialog):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
+        super(RateMovieDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
+        self.imdbid = None
+        self.title = None
+        self.year = None
 
     def initDialog(self, imdbid, title, year, curRating):
         self.imdbid = imdbid
         self.title = title
         self.year = year
-        self.curRating = curRating
-        if not self.curRating in ["love", "hate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]:
-            self.curRating = None
+        super(RateMovieDialog, self).initDialog(curRating)
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(142).encode( "utf-8", "ignore" )) # How would you rate that movie?
-        self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
-        self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)
-        self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
-        self.setFocus(self.getControl(RATE_SKIP_RATING))
-        self.updateRatedButton()
-        return
-
-    def onFocus( self, controlId ):
-        self.controlId = controlId
+        super(RateMovieDialog, self).onInit(__language__(142).encode("utf-8", "ignore"))
 
     def onClick(self, controlId):
-        if controlId == RATE_LOVE_BTN:
-            self.curRating = "love"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "love")
-            self.close()
-            return
-        elif controlId == RATE_HATE_BTN:
-            self.curRating = "hate"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "hate")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_1_BTN:
-            self.curRating = "1"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "1")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_2_BTN:
-            self.curRating = "2"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "2")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_3_BTN:
-            self.curRating = "3"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "3")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_4_BTN:
-            self.curRating = "4"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "4")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_5_BTN:
-            self.curRating = "5"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "5")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_6_BTN:
-            self.curRating = "6"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "6")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_7_BTN:
-            self.curRating = "7"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "7")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_8_BTN:
-            self.curRating = "8"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "8")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_9_BTN:
-            self.curRating = "9"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "9")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_10_BTN:
-            self.curRating = "10"
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "10")
-            self.close()
-            return
-        elif controlId == RATE_SKIP_RATING:
-            self.close()
-            return
-        elif controlId in (RATE_CUR_LOVE, RATE_CUR_HATE, RATE_CUR_ADVANCED_1, RATE_CUR_ADVANCED_2, RATE_CUR_ADVANCED_3, RATE_CUR_ADVANCED_4, RATE_CUR_ADVANCED_5, RATE_CUR_ADVANCED_6, RATE_CUR_ADVANCED_7, RATE_CUR_ADVANCED_8, RATE_CUR_ADVANCED_9, RATE_CUR_ADVANCED_10):
-            self.curRating = None
-            self.updateRatedButton()
-            utilities.rateMovieOnTrakt(self.imdbid, self.title, self.year, "unrate")
-            return
-        else:
-            Debug("Uncaught click (rate movie dialog): "+str(controlId))
-
-    def onAction(self, action):
-        if action.getId() in (0, 107):
-            return
-        if action.getId() in (ACTION_PARENT_DIRECTORY, ACTION_PREVIOUS_MENU):
-            Debug("Closing RateMovieDialog")
-            self.close()
-        else:
-            Debug("Uncaught action (rate movie dialog): "+str(action.getId()))
-
-    def updateRatedButton(self):
-        self.getControl(RATE_CUR_NO_RATING).setVisible(False if self.curRating != None else True)
-        self.getControl(RATE_CUR_LOVE).setVisible(False if self.curRating != "love" else True)
-        self.getControl(RATE_CUR_HATE).setVisible(False if self.curRating != "hate" else True)
-        if utilities.getTraktRatingType() == "advanced":
-            self.getControl(RATE_CUR_ADVANCED_1).setVisible(False if self.curRating != "1" else True)
-            self.getControl(RATE_CUR_ADVANCED_2).setVisible(False if self.curRating != "2" else True)
-            self.getControl(RATE_CUR_ADVANCED_3).setVisible(False if self.curRating != "3" else True)
-            self.getControl(RATE_CUR_ADVANCED_4).setVisible(False if self.curRating != "4" else True)
-            self.getControl(RATE_CUR_ADVANCED_5).setVisible(False if self.curRating != "5" else True)
-            self.getControl(RATE_CUR_ADVANCED_6).setVisible(False if self.curRating != "6" else True)
-            self.getControl(RATE_CUR_ADVANCED_7).setVisible(False if self.curRating != "7" else True)
-            self.getControl(RATE_CUR_ADVANCED_8).setVisible(False if self.curRating != "8" else True)
-            self.getControl(RATE_CUR_ADVANCED_9).setVisible(False if self.curRating != "9" else True)
-            self.getControl(RATE_CUR_ADVANCED_10).setVisible(False if self.curRating != "10" else True)
+        method = functools.partial(utilities.rateMovieOnTrakt, self.imdbid, self.title, self.year)
+        super(RateMovieDialog, self).onClick(controlId, method)
 
 
-
-class RateEpisodeDialog(xbmcgui.WindowXMLDialog):
+class RateEpisodeDialog(RateDialog):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
+        super(RateEpisodeDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
+        self.tvdbid = None
+        self.title = None
+        self.year = None
+        self.season = None
+        self.episode = None
 
     def initDialog(self, tvdbid, title, year, season, episode, curRating):
         self.tvdbid = tvdbid
@@ -607,274 +502,50 @@ class RateEpisodeDialog(xbmcgui.WindowXMLDialog):
         self.year = year
         self.season = season
         self.episode = episode
-        self.curRating = curRating
-        if not self.curRating in ["love", "hate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]:
-            self.curRating = None
+        super(RateEpisodeDialog, self).initDialog(curRating)
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(143).encode( "utf-8", "ignore" )) # How would you rate that episode?
-        self.getControl(RATE_RATE_SHOW_BTN).setLabel(__language__(144).encode( "utf-8", "ignore" )) # Rate whole show
-        self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
-        self.setFocus(self.getControl(RATE_SKIP_RATING))
-        self.updateRatedButton()
-        return
-
-    def onFocus( self, controlId ):
-        self.controlId = controlId
+        super(RateEpisodeDialog, self).onInit(__language__(143).encode("utf-8", "ignore"))
+        self.getControl(RATE_RATE_SHOW_BTN).setLabel(__language__(144).encode( "utf-8", "ignore" ))
+        self.getControl(RATE_RATE_SHOW_BTN).setVisible(True)
+        self.getControl(RATE_RATE_SHOW_BG).setVisible(True)
 
     def onClick(self, controlId):
-        if controlId == RATE_LOVE_BTN:
-            self.curRating = "love"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "love")
-            self.close()
-            return
-        elif controlId == RATE_HATE_BTN:
-            self.curRating = "hate"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "hate")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_1_BTN:
-            self.curRating = "1"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "1")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_2_BTN:
-            self.curRating = "2"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "2")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_3_BTN:
-            self.curRating = "3"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "3")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_4_BTN:
-            self.curRating = "4"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "4")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_5_BTN:
-            self.curRating = "5"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "5")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_6_BTN:
-            self.curRating = "6"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "6")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_7_BTN:
-            self.curRating = "7"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "7")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_8_BTN:
-            self.curRating = "8"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "8")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_9_BTN:
-            self.curRating = "9"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "9")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_10_BTN:
-            self.curRating = "10"
-            self.updateRatedButton()
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "10")
-            self.close()
-            return
-        elif controlId == RATE_SKIP_RATING:
-            self.close()
-            return
-        elif controlId in (RATE_CUR_LOVE, RATE_CUR_HATE, RATE_CUR_ADVANCED_1, RATE_CUR_ADVANCED_2, RATE_CUR_ADVANCED_3, RATE_CUR_ADVANCED_4, RATE_CUR_ADVANCED_5, RATE_CUR_ADVANCED_6, RATE_CUR_ADVANCED_7, RATE_CUR_ADVANCED_8, RATE_CUR_ADVANCED_9, RATE_CUR_ADVANCED_10):
-            self.curRating = None
-            self.updateRatedButton();
-            utilities.rateEpisodeOnTrakt(self.tvdbid, self.title, self.year, self.season, self.episode, "unrate")
-            return
-        elif controlId == RATE_RATE_SHOW_BTN:
+        if controlId == RATE_RATE_SHOW_BTN:
             self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
             self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)
             self.setFocus(self.getControl(RATE_SKIP_RATING))
 
-            if utilities.getTraktRatingType() == "advanced":
-                rateShow = RateShowDialog("rate_advanced.xml", __settings__.getAddonInfo('path'), "Default")
+            if self._rating_type == "advanced":
+                rateShow = RateShowDialog("rate_advanced.xml", __settings__.getAddonInfo('path'))
             else:
-                rateShow = RateShowDialog("rate.xml", __settings__.getAddonInfo('path'), "Default")
+                rateShow = RateShowDialog("rate.xml", __settings__.getAddonInfo('path'))
 
             rateShow.initDialog(self.tvdbid, self.title, self.year, utilities.getShowRatingFromTrakt(self.tvdbid, self.title, self.year))
             rateShow.doModal()
             del rateShow
         else:
-            Debug("Uncaught click (rate episode dialog): "+str(controlId))
-
-    def onAction(self, action):
-        if action.getId() in (0, 107):
-            return
-        if action.getId() in (ACTION_PARENT_DIRECTORY, ACTION_PREVIOUS_MENU):
-            Debug("Closing RateEpisodeDialog")
-            self.close()
-        else:
-            Debug("Uncaught action (rate episode dialog): "+str(action.getId()))
-
-    def updateRatedButton(self):
-        self.getControl(RATE_CUR_NO_RATING).setVisible(False if self.curRating != None else True)
-        self.getControl(RATE_CUR_LOVE).setVisible(False if self.curRating != "love" else True)
-        self.getControl(RATE_CUR_HATE).setVisible(False if self.curRating != "hate" else True)
-        if utilities.getTraktRatingType() == "advanced":
-            self.getControl(RATE_CUR_ADVANCED_1).setVisible(False if self.curRating != "1" else True)
-            self.getControl(RATE_CUR_ADVANCED_2).setVisible(False if self.curRating != "2" else True)
-            self.getControl(RATE_CUR_ADVANCED_3).setVisible(False if self.curRating != "3" else True)
-            self.getControl(RATE_CUR_ADVANCED_4).setVisible(False if self.curRating != "4" else True)
-            self.getControl(RATE_CUR_ADVANCED_5).setVisible(False if self.curRating != "5" else True)
-            self.getControl(RATE_CUR_ADVANCED_6).setVisible(False if self.curRating != "6" else True)
-            self.getControl(RATE_CUR_ADVANCED_7).setVisible(False if self.curRating != "7" else True)
-            self.getControl(RATE_CUR_ADVANCED_8).setVisible(False if self.curRating != "8" else True)
-            self.getControl(RATE_CUR_ADVANCED_9).setVisible(False if self.curRating != "9" else True)
-            self.getControl(RATE_CUR_ADVANCED_10).setVisible(False if self.curRating != "10" else True)
+            method = functools.partial(utilities.rateEpisodeOnTrakt, self.tvdbid, self.title, self.year, self.season, self.episode)
+            super(RateEpisodeDialog, self).onClick(controlId, method)
 
 
-class RateShowDialog(xbmcgui.WindowXMLDialog):
+class RateShowDialog(RateDialog):
+    def __init__(self, xml, fallback_path=__settings__.getAddonInfo('path'), defaultskinname="Default", forcefallback=False):
+        super(RateShowDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
+        self.tvdbid = None
+        self.title = None
+        self.year = None
 
     def initDialog(self, tvdbid, title, year, curRating):
         self.tvdbid = tvdbid
         self.title = title
         self.year = year
-        self.curRating = curRating
-        if not self.curRating in ["love", "hate", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]:
-            self.curRating = None
+        super(RateShowDialog, self).initDialog(curRating)
 
     def onInit(self):
-        self.getControl(RATE_TITLE).setLabel(__language__(145).encode( "utf-8", "ignore" )) # How would you rate that show?
-        self.getControl(RATE_SCENE).setVisible(False)
-        self.getControl(RATE_RATE_SHOW_BG).setVisible(False)
-        self.getControl(RATE_RATE_SHOW_BTN).setVisible(False)
-        self.getControl(RATE_CUR_NO_RATING).setEnabled(False)
-        self.setFocus(self.getControl(RATE_SKIP_RATING))
-        self.updateRatedButton()
-        return
-
-    def onFocus( self, controlId ):
-        self.controlId = controlId
+        super(RateShowDialog, self).onInit(__language__(145).encode("utf-8", "ignore"))
 
     def onClick(self, controlId):
-        if controlId == RATE_LOVE_BTN:
-            self.curRating = "love"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "love")
-            self.close()
-            return
-        elif controlId == RATE_HATE_BTN:
-            self.curRating = "hate"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "hate")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_1_BTN:
-            self.curRating = "1"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "1")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_2_BTN:
-            self.curRating = "2"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "2")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_3_BTN:
-            self.curRating = "3"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "3")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_4_BTN:
-            self.curRating = "4"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "4")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_5_BTN:
-            self.curRating = "5"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "5")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_6_BTN:
-            self.curRating = "6"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "6")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_7_BTN:
-            self.curRating = "7"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "7")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_8_BTN:
-            self.curRating = "8"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "8")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_9_BTN:
-            self.curRating = "9"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "9")
-            self.close()
-            return
-        elif controlId == RATE_ADVANCED_10_BTN:
-            self.curRating = "10"
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "10")
-            self.close()
-            return
-        elif controlId == RATE_SKIP_RATING:
-            self.close()
-            return
-        elif controlId in (RATE_CUR_LOVE, RATE_CUR_HATE, RATE_CUR_ADVANCED_1, RATE_CUR_ADVANCED_2, RATE_CUR_ADVANCED_3, RATE_CUR_ADVANCED_4, RATE_CUR_ADVANCED_5, RATE_CUR_ADVANCED_6, RATE_CUR_ADVANCED_7, RATE_CUR_ADVANCED_8, RATE_CUR_ADVANCED_9, RATE_CUR_ADVANCED_10):
-            self.curRating = None
-            self.updateRatedButton()
-            utilities.rateShowOnTrakt(self.tvdbid, self.title, self.year, "unrate")
-            return
-        elif controlId == RATE_RATE_SHOW_BTN:
-            return
-        else:
-            Debug("Uncaught click (rate show dialog): "+str(controlId))
+        method = functools.partial(utilities.rateShowOnTrakt, self.tvdbid, self.title, self.year)
+        super(RateShowDialog, self).onClick(controlId, method)
 
-    def onAction(self, action):
-        if action.getId() in (0, 107):
-            return
-        if action.getId() in (ACTION_PARENT_DIRECTORY, ACTION_PREVIOUS_MENU):
-            Debug("Closing RateShowDialog")
-            self.close()
-        else:
-            Debug("Uncaught action (rate show dialog): "+str(action.getId()))
-
-    def updateRatedButton(self):
-        self.getControl(RATE_CUR_NO_RATING).setVisible(False if self.curRating != None else True)
-        self.getControl(RATE_CUR_LOVE).setVisible(False if self.curRating != "love" else True)
-        self.getControl(RATE_CUR_HATE).setVisible(False if self.curRating != "hate" else True)
-        if utilities.getTraktRatingType() == "advanced":
-            self.getControl(RATE_CUR_ADVANCED_1).setVisible(False if self.curRating != "1" else True)
-            self.getControl(RATE_CUR_ADVANCED_2).setVisible(False if self.curRating != "2" else True)
-            self.getControl(RATE_CUR_ADVANCED_3).setVisible(False if self.curRating != "3" else True)
-            self.getControl(RATE_CUR_ADVANCED_4).setVisible(False if self.curRating != "4" else True)
-            self.getControl(RATE_CUR_ADVANCED_5).setVisible(False if self.curRating != "5" else True)
-            self.getControl(RATE_CUR_ADVANCED_6).setVisible(False if self.curRating != "6" else True)
-            self.getControl(RATE_CUR_ADVANCED_7).setVisible(False if self.curRating != "7" else True)
-            self.getControl(RATE_CUR_ADVANCED_8).setVisible(False if self.curRating != "8" else True)
-            self.getControl(RATE_CUR_ADVANCED_9).setVisible(False if self.curRating != "9" else True)
-            self.getControl(RATE_CUR_ADVANCED_10).setVisible(False if self.curRating != "10" else True)

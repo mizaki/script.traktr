@@ -47,6 +47,9 @@ def Debug(msg, force=False):
         except UnicodeEncodeError:
             print "Traktr: " + msg.encode( "utf-8", "ignore" )
 
+def _(string_id):
+    """Returns the string from the language resource files specified by the id provided"""
+    return __language__(string_id).encode("utf-8", "ignore")
 
 import raw_xbmc_database
 
@@ -98,12 +101,8 @@ def checkSettings(daemon=False):
 
 # get a connection to trakt
 def getTraktConnection():
-    https = __settings__.getSetting('https')
     try:
-        if (https == 'true'):
-            conn = nbconnection.NBConnection('api.trakt.tv', https=True)
-        else:
-            conn = nbconnection.NBConnection('api.trakt.tv')
+        conn = nbconnection.NBConnection('api.trakt.tv')
     except socket.timeout:
         Debug("getTraktConnection: can't connect to trakt - timeout")
         return None
@@ -163,7 +162,7 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
             return data
         return None
 
-    conn.go()
+    conn.fire()
 
     while True:
         if xbmc.abortRequested:
@@ -174,11 +173,11 @@ def traktJsonRequest(method, req, args={}, returnStatus=False, anon=False, conn=
                 data['error'] = 'Abort requested, not waiting for responce'
                 return data
             return None
-        if conn.hasResult():
+        if conn.has_result():
             break
         time.sleep(0.1)
 
-    response = conn.getResult()
+    response = conn.get_result()
     raw = response.read()
     if closeConnection:
         conn.close()
@@ -242,34 +241,12 @@ def traktShowListByTvdbID(data):
 
     return trakt_tvshows
 
-# set episodes seen on trakt
-def setEpisodesSeenOnTrakt(tvdb_id, title, year, episodes):
-    data = traktJsonRequest('POST', '/show/episode/seen/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'episodes': episodes})
-    if data == None:
-        Debug("Error in request from 'setEpisodeSeenOnTrakt()'")
-    return data
-
-# set episodes unseen on trakt
-def setEpisodesUnseenOnTrakt(tvdb_id, title, year, episodes):
-    data = traktJsonRequest('POST', '/show/episode/unseen/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'episodes': episodes})
-    if data == None:
-        Debug("Error in request from 'setEpisodesUnseenOnTrakt()'")
-    return data
-
 # set movies seen on trakt
 #  - movies, required fields are 'plays', 'last_played' and 'title', 'year' or optionally 'imdb_id'
 def setMoviesSeenOnTrakt(movies):
     data = traktJsonRequest('POST', '/movie/seen/%%API_KEY%%', {'movies': movies})
     if data == None:
         Debug("Error in request from 'setMoviesSeenOnTrakt()'")
-    return data
-
-# set movies unseen on trakt
-#  - movies, required fields are 'plays', 'last_played' and 'title', 'year' or optionally 'imdb_id'
-def setMoviesUnseenOnTrakt(movies):
-    data = traktJsonRequest('POST', '/movie/unseen/%%API_KEY%%', {'movies': movies})
-    if data == None:
-        Debug("Error in request from 'setMoviesUnseenOnTrakt()'")
     return data
 
 # get tvshow collection from trakt server
@@ -793,19 +770,3 @@ def scrobbleEpisodeOnTrakt(tvdb_id, title, year, season, episode, duration, perc
         Debug("Error in request from 'scrobbleEpisodeOnTrakt()'")
     return responce
 
-
-"""
-ToDo:
-
-
-"""
-
-
-"""
-for later:
-First call "Player.GetActivePlayers" to determine the currently active player (audio, video or picture).
-If it is audio or video call Audio/VideoPlaylist.GetItems and read the "current" field to get the position of the
-currently playling item in the playlist. The "items" field contains an array of all items in the playlist and "items[current]" is
-the currently playing file. You can also tell jsonrpc which fields to return for every item in the playlist and therefore you'll have all the information you need.
-
-"""
