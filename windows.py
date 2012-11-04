@@ -401,7 +401,7 @@ class RateDialog(xbmcgui.WindowXMLDialog):
         super(RateDialog, self).__init__(xml, fallback_path, defaultskinname, forcefallback)
 
         self._id_to_rating_string = {
-            RATE_LOVE_BTN: "love", RATE_HATE_BTN: "hate", RATE_ADVANCED_1_BTN: "1",
+            RATE_SKIP_RATING: "skip", RATE_LOVE_BTN: "love", RATE_HATE_BTN: "hate", RATE_ADVANCED_1_BTN: "1",
             RATE_ADVANCED_2_BTN: "2", RATE_ADVANCED_3_BTN: "3", RATE_ADVANCED_4_BTN: "4",
             RATE_ADVANCED_5_BTN: "5", RATE_ADVANCED_6_BTN: "6", RATE_ADVANCED_7_BTN: "7",
             RATE_ADVANCED_8_BTN: "8", RATE_ADVANCED_9_BTN: "9", RATE_ADVANCED_10_BTN: "10"
