@@ -5,6 +5,7 @@ import xbmc
 import telnetlib
 import socket
 import threading
+import time
 
 try:
     import simplejson as json
@@ -69,7 +70,8 @@ class NotificationService(threading.Thread):
             return data
 
 
-    def run(self):
+    def run(self):a
+	time.sleep(5)
         self._scrobbler = Scrobbler()
         self._scrobbler.start()
         telnet = telnetlib.Telnet(self.TELNET_ADDRESS, self.TELNET_PORT)
