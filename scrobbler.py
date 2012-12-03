@@ -116,7 +116,8 @@ class Scrobbler(threading.Thread):
     def _started_watching(self):
         scrobble_movies = __settings__.getSetting("scrobble_movie")
         scrobble_episodes = __settings__.getSetting("scrobble_episode")
-
+       
+        Debug('[Scrobbler] Started watching')
         if self._current_video['type'] == 'movie' and scrobble_movies == 'true':
             match = utilities.getMovieDetailsFromXbmc(self._current_video['id'], ['imdbnumber', 'title', 'year'])
             if match == None:

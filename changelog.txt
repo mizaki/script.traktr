@@ -1,3 +1,7 @@
+Version 1.0.2:
+    - Fixed connection refused in xbmc
+    - Massive improvement to the advanced rating window
+
 Version 1.0.1:
     - Fixed key error
     - More sane defaults
