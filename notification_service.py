@@ -70,8 +70,8 @@ class NotificationService(threading.Thread):
             return data
 
 
-    def run(self):a
-	time.sleep(5)
+    def run(self):
+        time.sleep(5)
         self._scrobbler = Scrobbler()
         self._scrobbler.start()
         telnet = telnetlib.Telnet(self.TELNET_ADDRESS, self.TELNET_PORT)
