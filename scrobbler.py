@@ -126,10 +126,10 @@ class Scrobbler(threading.Thread):
             if response != None:
                 Debug("[Scrobbler] Watch response: "+str(response))
         elif self._current_video['type'] == 'episode' and scrobble_episodes == 'true':
-            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode'])
+            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode', 'uniqueid'])
             if match == None:
                 return
-            response = utilities.watchingEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            response = utilities.watchingEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], match['uniqueid']['unknown'], self._total_time/60, int(100*self._watched_time/self._total_time))
             if response != None:
                 Debug("[Scrobbler] Watch responce: "+str(response))
 
@@ -160,10 +160,10 @@ class Scrobbler(threading.Thread):
             if response != None:
                 Debug("[Scrobbler] Scrobble responce: "+str(response))
         elif self._current_video['type'] == 'episode' and scrobble_episodes == 'true':
-            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode'])
+            match = utilities.getEpisodeDetailsFromXbmc(self._current_video['id'], ['showtitle', 'season', 'episode', 'uniqueid'])
             if match == None:
                 return
-            response = utilities.scrobbleEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], self._total_time/60, int(100*self._watched_time/self._total_time))
+            response = utilities.scrobbleEpisodeOnTrakt(None, match['showtitle'], None, match['season'], match['episode'], match['uniqueid']['unknown'], self._total_time/60, int(100*self._watched_time/self._total_time))
             if response != None:
                 Debug("[Scrobbler] Scrobble responce: "+str(response))
 

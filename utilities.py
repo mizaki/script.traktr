@@ -736,8 +736,8 @@ def watchingMovieOnTrakt(imdb_id, title, year, duration, percent):
     return responce
 
 #tell trakt that the user is watching an episode
-def watchingEpisodeOnTrakt(tvdb_id, title, year, season, episode, duration, percent):
-    responce = traktJsonRequest('POST', '/show/watching/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'season': season, 'episode': episode, 'duration': duration, 'progress': percent}, passVersions=True)
+def watchingEpisodeOnTrakt(tvdb_id, title, year, season, episode, uniqueid, duration, percent):
+    responce = traktJsonRequest('POST', '/show/watching/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'season': season, 'episode': episode, 'episode_tvdb_id': uniqueid, 'duration': duration, 'progress': percent}, passVersions=True)
     if responce == None:
         Debug("Error in request from 'watchingEpisodeOnTrakt()'")
     return responce
@@ -764,8 +764,8 @@ def scrobbleMovieOnTrakt(imdb_id, title, year, duration, percent):
     return responce
 
 #tell trakt that the user has finished watching an episode
-def scrobbleEpisodeOnTrakt(tvdb_id, title, year, season, episode, duration, percent):
-    responce = traktJsonRequest('POST', '/show/scrobble/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'season': season, 'episode': episode, 'duration': duration, 'progress': percent}, passVersions=True)
+def scrobbleEpisodeOnTrakt(tvdb_id, title, year, season, episode, uniqueid, duration, percent):
+    responce = traktJsonRequest('POST', '/show/scrobble/%%API_KEY%%', {'tvdb_id': tvdb_id, 'title': title, 'year': year, 'season': season, 'episode': episode, 'episode_tvdb_id': uniqueid, 'duration': duration, 'progress': percent}, passVersions=True)
     if responce == None:
         Debug("Error in request from 'scrobbleEpisodeOnTrakt()'")
     return responce
